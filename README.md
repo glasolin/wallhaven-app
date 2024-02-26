@@ -7,6 +7,6 @@
 
 ## Основной экран
 
-![](/assets/mockup/screen-main.png?width=100)
+<img src="/assets/mockup/screen-main.png" height=250>
 
 
