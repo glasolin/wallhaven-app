@@ -7,6 +7,6 @@
 
 ## Основной экран
 
-![](/assets/mockup/screen-main.png)
+![](/assets/mockup/screen-main.png?width=100)
 
 
