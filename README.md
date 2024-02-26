@@ -88,6 +88,6 @@
    * Чистота
    * Разрешение
 5. Добавление в избранное
-6. 
+
 Примерный мокап:
 <img src="/assets/mockup/screen-wallpaper.png" height=750>
