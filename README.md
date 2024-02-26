@@ -20,6 +20,7 @@
 6. Плашка навигации: Основной, Избранное, Настройки
 
 Примерный мокап:
+
 <img src="/assets/mockup/screen-main.png" height=750>
 
 ## Фильтры
@@ -36,6 +37,7 @@
 8. Сбросить фильтр
 
 Примерный мокап:
+
 <img src="/assets/mockup/screen-filters.png" height=750>
 
 ## Избранное
@@ -50,6 +52,7 @@
 4. Плашка навигации: Основной, Избранное, Настройки
 
 Примерный мокап:
+
 <img src="/assets/mockup/screen-favorites.png" height=750>
 
 ## Настройки
@@ -69,6 +72,7 @@
 6. Плашка навигации: Основной, Избранное, Настройки
 
 Примерный мокап:
+
 <img src="/assets/mockup/screen-settings.png" height=750>
 
 ## Просмотр картинки
@@ -90,4 +94,5 @@
 5. Добавление в избранное
 
 Примерный мокап:
+
 <img src="/assets/mockup/screen-wallpaper.png" height=750>
