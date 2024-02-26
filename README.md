@@ -18,6 +18,6 @@
 5. Грид с картинками
 6. Плашка навигации: Основной, Избранное, Настройки
 
-<img src="/assets/mockup/screen-main.png" height=50->
+<img src="/assets/mockup/screen-main.png" height=500>
 
 
