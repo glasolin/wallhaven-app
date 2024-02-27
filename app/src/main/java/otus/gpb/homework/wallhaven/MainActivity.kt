@@ -67,6 +67,7 @@ class HelloWorld : Fragment() {
             )
             setContent {
                 MaterialTheme {
+                    Text("Hello world!")
                     draw()
                 }
             }
