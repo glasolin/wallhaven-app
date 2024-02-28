@@ -9,20 +9,11 @@
     >
 
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/hello_world"
+        android:id="@+id/nav_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <Button
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="20dp"
-        android:id="@+id/xml_view_button"
-        android:text="button"
-        app:layout_constraintLeft_toLeftOf="parent"
-        />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
