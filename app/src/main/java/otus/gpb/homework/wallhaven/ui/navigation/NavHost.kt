@@ -9,13 +9,11 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import otus.gpb.homework.wallhaven.ui.screens.MainRoute
-import otus.gpb.homework.wallhaven.ui.screens.MainScreen
+import otus.gpb.homework.wallhaven.ui.screens.favoritesScreen
 import otus.gpb.homework.wallhaven.ui.screens.mainScreen
+import otus.gpb.homework.wallhaven.ui.screens.settingsScreen
 
-class AppMainState(
+class AppState(
     val navController: NavHostController,
     coroutineScope: CoroutineScope,
     val windowSizeClass: WindowSizeClass,
@@ -40,7 +38,7 @@ class AppMainState(
 }
 @Composable
 fun AppNavHost(
-    appState: AppMainState,
+    appState: AppState,
     onShowSnackbar: suspend (String, String?) -> Boolean,
     modifier: Modifier = Modifier,
     startDestination: String = MAIN_ROUTE,
@@ -51,6 +49,8 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
-        this.mainScreen {  }
+        mainScreen()
+        settingsScreen()
+        favoritesScreen()
     }
 }
