@@ -20,11 +20,12 @@ import otus.gpb.homework.wallhaven.ui.navigation.SETTINGS_ROUTE
 import otus.gpb.homework.wallhaven.ui.screens.navigateToFavorites
 import otus.gpb.homework.wallhaven.ui.screens.navigateToMain
 import otus.gpb.homework.wallhaven.ui.screens.navigateToSettings
+import javax.inject.Inject
 
-class uiState() {
-    lateinit var navController: NavHostController
-    lateinit var coroutineScope: CoroutineScope
-    lateinit var windowSizeClass: WindowSizeClass
+class UiState @Inject constructor(
+    navController: NavHostController,
+    coroutineScope: CoroutineScope,
+    windowSizeClass: WindowSizeClass) {
 
     val destination: NavDestination?
         @Composable get() = navController

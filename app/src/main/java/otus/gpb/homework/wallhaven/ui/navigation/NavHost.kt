@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import otus.gpb.homework.wallhaven.ui.screens.favoritesScreen
 import otus.gpb.homework.wallhaven.ui.screens.mainScreen
 import otus.gpb.homework.wallhaven.ui.screens.settingsScreen
-import otus.gpb.homework.wallhaven.uiState
+import otus.gpb.homework.wallhaven.UiState
 
 class AppNavState(
     val navController: NavHostController,
@@ -39,7 +39,7 @@ class AppNavState(
 }
 @Composable
 fun AppNavHost(
-    state: uiState,
+    state: UiState,
     onShowSnackbar: suspend (String, String?) -> Boolean,
     modifier: Modifier = Modifier,
     startDestination: String = MAIN_ROUTE,

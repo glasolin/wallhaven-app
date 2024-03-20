@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
 
 enum class Themes {
@@ -30,7 +31,7 @@ data class SettingsData (
     var theme:Themes = Themes.SYSTEM,
 )
 
-class Settings() {
+class Settings {
     var status:SettingsStatus=SettingsStatus.NONE
         private set
     private val tag = "Settings"

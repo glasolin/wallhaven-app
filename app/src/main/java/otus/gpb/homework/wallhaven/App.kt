@@ -62,7 +62,7 @@ import otus.gpb.homework.wallhaven.ui.theme.Background
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun App(state: uiState) {
+fun App(state: UiState) {
     Background {
         val snackbarHostState = remember { SnackbarHostState() }
 

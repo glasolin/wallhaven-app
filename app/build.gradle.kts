@@ -120,7 +120,7 @@ dependencies {
 
     // For instrumentation tests
     androidTestImplementation("com.google.dagger:hilt-android-testing:$hilt_version")
-    kaptAndroidTest("com.google.dagger:hilt-compiler:2.51:$hilt_version")
+    kaptAndroidTest("com.google.dagger:hilt-compiler:$hilt_version")
 
     // For local unit tests
     testImplementation("com.google.dagger:hilt-android-testing:$hilt_version")
