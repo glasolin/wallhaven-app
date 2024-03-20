@@ -1,6 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
@@ -39,7 +41,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.9"
+        kotlinCompilerExtensionVersion = "1.5.10"
     }
 }
 
@@ -56,6 +58,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-android:1.6.2")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
     implementation("androidx.core:core-splashscreen:1.1.0-alpha02")
+    implementation("androidx.datastore:datastore-core:1.0.0")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -108,8 +114,21 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:$nav_version")
     implementation("androidx.navigation:navigation-ui-ktx:$nav_version")
     implementation("androidx.navigation:navigation-compose:$nav_version")
+    val hilt_version="2.51"
+    implementation("com.google.dagger:hilt-android:$hilt_version")
+    kapt("com.google.dagger:hilt-compiler:$hilt_version")
 
+    // For instrumentation tests
+    androidTestImplementation("com.google.dagger:hilt-android-testing:$hilt_version")
+    kaptAndroidTest("com.google.dagger:hilt-compiler:2.51:$hilt_version")
 
+    // For local unit tests
+    testImplementation("com.google.dagger:hilt-android-testing:$hilt_version")
+    kaptTest("com.google.dagger:hilt-compiler:$hilt_version")
+
+}
+kapt {
+    correctErrorTypes=true
 }
 
 tasks.register<Wrapper>("wrapper") {

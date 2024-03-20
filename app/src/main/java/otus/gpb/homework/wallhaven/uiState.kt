@@ -3,11 +3,9 @@ package otus.gpb.homework.wallhaven
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.util.trace
-import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -15,11 +13,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import otus.gpb.homework.wallhaven.ui.navigation.FAVORITES_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.MAIN_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.Navigation
@@ -28,31 +21,11 @@ import otus.gpb.homework.wallhaven.ui.screens.navigateToFavorites
 import otus.gpb.homework.wallhaven.ui.screens.navigateToMain
 import otus.gpb.homework.wallhaven.ui.screens.navigateToSettings
 
-@Composable
-fun rememberAppState(
-    windowSizeClass: WindowSizeClass,
-    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavHostController = rememberNavController(),
-): AppState {
-    return remember(
-        navController,
-        coroutineScope,
-        windowSizeClass,
-        networkMonitor,
-    ) {
-        AppState(
-            navController = navController,
-            coroutineScope = coroutineScope,
-            windowSizeClass = windowSizeClass,
-        )
-    }
-}
+class uiState() {
+    lateinit var navController: NavHostController
+    lateinit var coroutineScope: CoroutineScope
+    lateinit var windowSizeClass: WindowSizeClass
 
-class AppState(
-    val navController: NavHostController,
-    coroutineScope: CoroutineScope,
-    val windowSizeClass: WindowSizeClass,
-) {
     val destination: NavDestination?
         @Composable get() = navController
             .currentBackStackEntryAsState().value?.destination

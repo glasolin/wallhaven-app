@@ -55,18 +55,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import otus.gpb.homework.wallhaven.ui.navigation.AppNavHost
+import otus.gpb.homework.wallhaven.ui.navigation.AppNavState
 import otus.gpb.homework.wallhaven.ui.navigation.Navigation
 import otus.gpb.homework.wallhaven.ui.theme.AppIcons
 import otus.gpb.homework.wallhaven.ui.theme.Background
-import com.google.samples.apps.nowinandroid.feature.settings.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun App(appState: AppState) {
-    val shouldShowGradientBackground =
-        appState.currentTopLevelDestination == Navigation.MAIN
-    var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
-
+fun App(state: uiState) {
     Background {
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -79,11 +75,11 @@ fun App(appState: AppState) {
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
-                if (appState.shouldShowBottomBar) {
+                if (state.shouldShowBottomBar) {
                     AppBottomBar(
-                        destinations = appState.topLevelDestinations,
-                        onNavigateToDestination = appState::navigateToTopLevelDestination,
-                        currentDestination = appState.destination,
+                        destinations = state.topLevelDestinations,
+                        onNavigateToDestination = state::navigateToTopLevelDestination,
+                        currentDestination = state.destination,
                         modifier = Modifier.testTag("BottomBar"),
                     )
                 }
@@ -100,11 +96,11 @@ fun App(appState: AppState) {
                         ),
                     ),
             ) {
-                if (appState.shouldShowNavRail) {
+                if (state.shouldShowNavRail) {
                     AppNavRail(
-                        destinations = appState.topLevelDestinations,
-                        onNavigateToDestination = appState::navigateToTopLevelDestination,
-                        currentDestination = appState.destination,
+                        destinations = state.topLevelDestinations,
+                        onNavigateToDestination = state::navigateToTopLevelDestination,
+                        currentDestination = state.destination,
                         modifier = Modifier
                             .testTag("NavRail")
                             .safeDrawingPadding(),
@@ -113,7 +109,7 @@ fun App(appState: AppState) {
 
                 Column(Modifier.fillMaxSize()) {
                     // Show the top app bar on top level destinations.
-                    val destination = appState.currentTopLevelDestination
+                    val destination = state.currentTopLevelDestination
                     if (destination != null) {
                         AppTopAppBar(
                             titleRes = destination.titleTextId,
@@ -128,13 +124,13 @@ fun App(appState: AppState) {
                             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                                 containerColor = Color.Transparent,
                             ),
-                            onActionClick = { showSettingsDialog = true },
-                            onNavigationClick = { appState.navigateToTopLevelDestination(Navigation.MAIN) },
+                            onActionClick = {  },
+                            onNavigationClick = { state.navigateToTopLevelDestination(Navigation.MAIN) },
                         )
                     }
 
                     AppNavHost(
-                        appState = appState,
+                        state = state,
                         onShowSnackbar = { message, action ->
                             snackbarHostState.showSnackbar(
                                 message = message,
