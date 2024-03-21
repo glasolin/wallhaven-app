@@ -44,14 +44,13 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     startDestination: String = MAIN_ROUTE,
 ) {
-    val navController = state.navController
     NavHost(
-        navController = navController,
+        navController = state.navController!!,
         startDestination = startDestination,
         modifier = modifier,
     ) {
         mainScreen()
-        settingsScreen()
         favoritesScreen()
+        settingsScreen()
     }
 }

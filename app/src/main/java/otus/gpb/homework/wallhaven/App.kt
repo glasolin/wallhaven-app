@@ -72,7 +72,7 @@ fun App(state: UiState) {
             },
             containerColor = Color.Transparent,
             contentColor = MaterialTheme.colorScheme.onBackground,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            //contentWindowInsets = WindowInsets(0, 0, 0, 0),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
                 if (state.shouldShowBottomBar) {

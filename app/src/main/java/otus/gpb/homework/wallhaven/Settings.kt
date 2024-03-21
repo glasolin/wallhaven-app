@@ -89,10 +89,13 @@ class Settings {
             Log.d(tag, "context not set")
             return
         }
-        if ((status!=SettingsStatus.READY) && (status!=SettingsStatus.NONE)) {
+        if (status!=SettingsStatus.NONE) {
             //ignore non ready for load statuses
+            Log.d(tag, "already loaded")
             return;
         }
+        Log.d(tag, "loading...")
+        status = SettingsStatus.LOADING
         val ctx=context
         runBlocking {
             launch {
@@ -109,6 +112,7 @@ class Settings {
                     } catch (e: Exception) {
                         Log.d(tag, e.message.toString())
                     } finally {
+                        Log.d(tag, "loaded")
                         status = SettingsStatus.READY
                     }
                 }

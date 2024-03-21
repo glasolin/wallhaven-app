@@ -20,15 +20,47 @@ import otus.gpb.homework.wallhaven.ui.navigation.SETTINGS_ROUTE
 import otus.gpb.homework.wallhaven.ui.screens.navigateToFavorites
 import otus.gpb.homework.wallhaven.ui.screens.navigateToMain
 import otus.gpb.homework.wallhaven.ui.screens.navigateToSettings
+import java.lang.Exception
 import javax.inject.Inject
 
-class UiState @Inject constructor(
-    navController: NavHostController,
-    coroutineScope: CoroutineScope,
-    windowSizeClass: WindowSizeClass) {
+class UiState @Inject constructor() {
+
+    var navController: NavHostController? = null
+        /*set(value) {
+            if (field == null) {field=value}
+        }*/
+        get() {
+            if (field == null) {
+                throw Exception("Nav controller was not initialized")
+            } else {
+                return field
+            }
+        }
+    var coroutineScope: CoroutineScope? = null
+        /*set(value) {
+            if (field == null) {field=value}
+        }*/
+        get() {
+            if (field == null) {
+                throw Exception("Corouitine Scope was not initialized")
+            } else {
+                return field
+            }
+        }
+    var windowSizeClass: WindowSizeClass? = null
+        /*set(value) {
+            if (field == null) {field=value}
+        }*/
+        get() {
+            if (field == null) {
+                throw Exception("Window Size Class was not initialized")
+            } else {
+                return field
+            }
+        }
 
     val destination: NavDestination?
-        @Composable get() = navController
+        @Composable get() = navController!!
             .currentBackStackEntryAsState().value?.destination
 
     val currentTopLevelDestination: Navigation?
@@ -40,7 +72,7 @@ class UiState @Inject constructor(
         }
 
     val shouldShowBottomBar: Boolean
-        get() = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
+        get() = windowSizeClass!!.widthSizeClass == WindowWidthSizeClass.Compact
 
     val shouldShowNavRail: Boolean
         get() = !shouldShowBottomBar
@@ -60,7 +92,7 @@ class UiState @Inject constructor(
                 // Pop up to the start destination of the graph to
                 // avoid building up a large stack of destinations
                 // on the back stack as users select items
-                popUpTo(navController.graph.findStartDestination().id) {
+                popUpTo(navController!!.graph.findStartDestination().id) {
                     saveState = true
                 }
                 // Avoid multiple copies of the same destination when
@@ -71,9 +103,9 @@ class UiState @Inject constructor(
             }
 
             when (topLevelDestination) {
-                Navigation.MAIN -> navController.navigateToMain(topLevelNavOptions)
-                Navigation.FAVORITES -> navController.navigateToFavorites(topLevelNavOptions)
-                Navigation.SETTINGS -> navController.navigateToSettings(topLevelNavOptions)
+                Navigation.MAIN -> navController!!.navigateToMain(topLevelNavOptions)
+                Navigation.FAVORITES -> navController!!.navigateToFavorites(topLevelNavOptions)
+                Navigation.SETTINGS -> navController!!.navigateToSettings(topLevelNavOptions)
             }
         }
     }

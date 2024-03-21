@@ -4,4 +4,5 @@ plugins {
     id("org.jetbrains.kotlin.android") version "1.9.22" apply false
     id("com.google.dagger.hilt.android") version "2.51" apply false
     kotlin("kapt") version "1.9.22" apply false
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.21" apply false
 }

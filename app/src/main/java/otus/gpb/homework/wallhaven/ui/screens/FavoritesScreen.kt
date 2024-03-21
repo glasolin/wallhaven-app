@@ -38,8 +38,8 @@ internal fun FavoritesScreen(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize(),
+        /*modifier = modifier
+            .fillMaxSize(),*/
     ) {
         Text("FavoritesScreen!")
     }

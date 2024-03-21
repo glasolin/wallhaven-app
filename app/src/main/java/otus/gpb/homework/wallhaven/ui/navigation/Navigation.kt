@@ -15,7 +15,7 @@ import otus.gpb.homework.wallhaven.R
 import otus.gpb.homework.wallhaven.ui.screens.MainRoute
 const val MAIN_ROUTE = "main_route"
 const val SETTINGS_ROUTE = "settings_route"
-const val FAVORITES_ROUTE = "settings_route"
+const val FAVORITES_ROUTE = "favorites_route"
 
 enum class Navigation(
     val selectedIcon: ImageVector,

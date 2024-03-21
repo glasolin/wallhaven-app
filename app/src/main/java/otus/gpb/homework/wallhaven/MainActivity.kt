@@ -3,6 +3,7 @@ package otus.gpb.homework.wallhaven
 import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.widget.ThemedSpinnerAdapter
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -11,6 +12,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -23,23 +27,47 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import otus.gpb.homework.wallhaven.ui.theme.AppTheme
+import otus.gpb.homework.wallhaven.ui.theme.Background
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+    private val tag = "MainActivity"
     private val viewModel by viewModels<MainActivityViewModel>()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val splashScreen = installSplashScreen()
         viewModel.setContext(applicationContext)
+        Log.d(tag, "installing splash screen")
+        val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition {
+            Log.d(tag, "Keep on screen condition: ${!viewModel.settingsLoaded()}")
             !viewModel.settingsLoaded()
         }
+        splashScreen.setOnExitAnimationListener {
+            Log.d(tag, "drawMain")
+            drawMain()
+            it.remove()
+        }
+        Log.d(tag, "drawStub")
+        enableEdgeToEdge()
+        setContent {
+            Background {
+                Box() {
+                    Text("MainActivity")
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+    private fun drawMain() {
         enableEdgeToEdge()
         setContent {
             val darkTheme = shouldUseDarkTheme(viewModel.settings())
@@ -63,8 +91,7 @@ class MainActivity : AppCompatActivity() {
             }
             viewModel.state().windowSizeClass=calculateWindowSizeClass(this)
             viewModel.state().coroutineScope=rememberCoroutineScope()
-
-
+            viewModel.state().navController= rememberNavController()
 
             CompositionLocalProvider(
             ) {
