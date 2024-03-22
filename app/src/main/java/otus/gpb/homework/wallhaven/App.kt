@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import otus.gpb.homework.wallhaven.ui.navigation.AppNavHost
-import otus.gpb.homework.wallhaven.ui.navigation.AppNavState
 import otus.gpb.homework.wallhaven.ui.navigation.Navigation
 import otus.gpb.homework.wallhaven.ui.theme.AppIcons
 import otus.gpb.homework.wallhaven.ui.theme.Background

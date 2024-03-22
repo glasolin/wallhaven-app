@@ -32,8 +32,7 @@ data class SettingsData (
 )
 
 class Settings {
-    var status:SettingsStatus=SettingsStatus.NONE
-        private set
+    private var status:SettingsStatus=SettingsStatus.NONE
     private val tag = "Settings"
     private val preferencesTag= stringPreferencesKey("JSON_user_prefs")
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings.dat")
@@ -48,7 +47,7 @@ class Settings {
             return preferences.theme
         }
 
-    fun store() {
+    private fun store() {
         if (context == null) {
             Log.d(tag, "context not set")
             return

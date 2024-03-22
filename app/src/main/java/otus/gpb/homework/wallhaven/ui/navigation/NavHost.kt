@@ -14,29 +14,6 @@ import otus.gpb.homework.wallhaven.ui.screens.mainScreen
 import otus.gpb.homework.wallhaven.ui.screens.settingsScreen
 import otus.gpb.homework.wallhaven.UiState
 
-class AppNavState(
-    val navController: NavHostController,
-    coroutineScope: CoroutineScope,
-    val windowSizeClass: WindowSizeClass,
-) {
-    val currentDestination: NavDestination?
-        @Composable get() = navController
-            .currentBackStackEntryAsState().value?.destination
-
-    val topDestination: Navigation?
-        @Composable get() = when (currentDestination?.route) {
-            MAIN_ROUTE -> Navigation.MAIN
-            FAVORITES_ROUTE -> Navigation.FAVORITES
-            SETTINGS_ROUTE -> Navigation.SETTINGS
-            else -> null
-        }
-
-    val shouldShowBottomBar: Boolean
-        get() = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
-
-    val shouldShowNavRail: Boolean
-        get() = !shouldShowBottomBar
-}
 @Composable
 fun AppNavHost(
     state: UiState,

@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private val tag = "MainActivity"
     private val viewModel by viewModels<MainActivityViewModel>()
 
+
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,18 +51,17 @@ class MainActivity : AppCompatActivity() {
             Log.d(tag, "Keep on screen condition: ${!viewModel.settingsLoaded()}")
             !viewModel.settingsLoaded()
         }
-        splashScreen.setOnExitAnimationListener {
-            Log.d(tag, "drawMain")
-            drawMain()
-            it.remove()
-        }
-        Log.d(tag, "drawStub")
-        enableEdgeToEdge()
+        Log.d(tag,"Draw main");
+        drawMain()
+    }
+
+    private fun drawStub() {
         setContent {
-            Background {
-                Box() {
-                    Text("MainActivity")
-                }
+            CompositionLocalProvider(
+            ) {
+                    Box() {
+                        Text("Stub!")
+                    }
             }
         }
     }

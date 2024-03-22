@@ -49,6 +49,7 @@ class MainActivityViewModel @Inject constructor(
     private val state: UiState = UiState(),
 ) : ViewModel() {
     private val contextLiveData = MutableLiveData<Context>()
+    private val themeLiveData = MutableLiveData<Themes>()
 
     init {
         contextLiveData.observeForever { context ->
@@ -56,6 +57,8 @@ class MainActivityViewModel @Inject constructor(
             settings.setContext(context)
         }
         settings.load()
+
+        //settings.theme.o
     }
     fun setContext(context: Context) {
         contextLiveData.value = context

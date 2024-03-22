@@ -489,21 +489,3 @@ fun AppTheme(
         )
     }
 }
-
-@Composable
-fun AppBackground(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    val color = LocalBackgroundTheme.current.color
-    val tonalElevation = LocalBackgroundTheme.current.tonalElevation
-    Surface(
-        color = if (color == Color.Unspecified) Color.Transparent else color,
-        tonalElevation = if (tonalElevation == Dp.Unspecified) 0.dp else tonalElevation,
-        modifier = modifier.fillMaxSize(),
-    ) {
-        CompositionLocalProvider(LocalAbsoluteTonalElevation provides 0.dp) {
-            content()
-        }
-    }
-}
