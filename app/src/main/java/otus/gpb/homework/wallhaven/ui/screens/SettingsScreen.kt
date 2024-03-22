@@ -64,18 +64,18 @@ internal fun SettingsScreen(
         Column(Modifier.selectableGroup()) {
             SettingsThemeChooserRow(
                 text = stringResource(R.string.settings_theme_system),
-                selected = settings.theme == Themes.SYSTEM,
-                onClick = { },
+                selected = settings.theme.value == Themes.SYSTEM,
+                onClick = { settings.theme.value = Themes.SYSTEM },
             )
             SettingsThemeChooserRow(
                 text = stringResource(R.string.settings_theme_light),
-                selected = settings.theme == Themes.LIGHT,
-                onClick = {settings.theme = Themes.LIGHT },
+                selected = settings.theme.value == Themes.LIGHT,
+                onClick = {settings.theme.value = Themes.LIGHT },
             )
             SettingsThemeChooserRow(
                 text = stringResource(R.string.settings_theme_dark),
-                selected = settings.theme == Themes.DARK,
-                onClick = { },
+                selected = settings.theme.value == Themes.DARK,
+                onClick = { settings.theme.value = Themes.DARK },
             )
         }
     }

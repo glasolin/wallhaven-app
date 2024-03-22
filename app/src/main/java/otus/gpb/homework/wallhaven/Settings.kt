@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -38,14 +39,19 @@ class Settings {
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings.dat")
     private var preferences = SettingsData()
     private var context:Context?=null
-    var theme=preferences.theme
-        set(value) {
-            field=value
-            store()
-         }
-        get() {
-            return preferences.theme
+
+    var theme = MutableLiveData<Themes>(preferences.theme).apply {
+        observeForever {
+            if (preferences.theme!=it) {
+                preferences.theme=it
+                store()
+            }
         }
+    }
+
+    private fun applySettings() {
+        theme.value=preferences.theme
+    }
 
     private fun store() {
         if (context == null) {
@@ -53,20 +59,29 @@ class Settings {
             return
         }
         if (status != SettingsStatus.READY) {
+            Log.d(tag, "store pending...")
             status = SettingsStatus.PENDING
         } else {
+            Log.d(tag, "storing...")
             status = SettingsStatus.STORING
             val json = Json.encodeToString(preferences)
             val ctx=context
             runBlocking {
                 launch {
-                    ctx!!.dataStore.edit { settings ->
-                        settings[preferencesTag] = json
-                    }
-                    if (status == SettingsStatus.PENDING) {
-                        status = SettingsStatus.READY
-                        store()
-                    } else {
+                    try {
+                        ctx!!.dataStore.edit { settings ->
+                            settings[preferencesTag] = json
+                        }
+                        if (status == SettingsStatus.PENDING) {
+                            status = SettingsStatus.READY
+                            store()
+                        } else {
+                            status = SettingsStatus.READY
+                            Log.d(tag, "stored")
+                        }
+                    } catch (e: Exception) {
+                        Log.d(tag, e.message.toString())
+                    } finally {
                         status = SettingsStatus.READY
                     }
                 }
@@ -112,6 +127,7 @@ class Settings {
                         Log.d(tag, e.message.toString())
                     } finally {
                         Log.d(tag, "loaded")
+                        applySettings()
                         status = SettingsStatus.READY
                     }
                 }

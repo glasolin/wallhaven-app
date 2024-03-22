@@ -51,6 +51,10 @@ class MainActivity : AppCompatActivity() {
             Log.d(tag, "Keep on screen condition: ${!viewModel.settingsLoaded()}")
             !viewModel.settingsLoaded()
         }
+        viewModel.settings().theme.observe(this) {
+            Log.d(tag,"Change theme to ${viewModel.settings().theme.value}");
+            drawMain()
+        }
         Log.d(tag,"Draw main");
         drawMain()
     }
@@ -116,10 +120,11 @@ class MainActivity : AppCompatActivity() {
 }
 @Composable
 private fun shouldUseDarkTheme(settings: Settings):Boolean =
-    when (settings.theme) {
+    when (settings.theme.value) {
         Themes.SYSTEM -> isSystemInDarkTheme()
         Themes.LIGHT -> false
         Themes.DARK -> true
+        else -> isSystemInDarkTheme()
     }
 
 
