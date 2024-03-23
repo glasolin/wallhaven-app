@@ -43,6 +43,7 @@ class MainActivityViewModel @Inject constructor(
             // Do something with context
             settings.setContext(context)
             state.setContext(context)
+            data.setContext(context)
         }
         settings.load()
     }

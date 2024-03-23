@@ -3,6 +3,8 @@ package otus.gpb.homework.wallhaven.ui.screens
 import android.content.res.Resources
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -14,8 +16,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialogDefaults.shape
 import androidx.compose.material3.Button
@@ -88,9 +92,12 @@ internal fun SettingsRoute(
     viewModel: MainActivityViewModel = hiltViewModel(),
 ) {
     SettingsScreen(
-        modifier=Modifier.padding(all=10.dp),
         settings=viewModel.settings(),
         data=viewModel.data(),
+        modifier= Modifier
+            .padding(all = 10.dp)
+            //.scrollable(state = rememberScrollState(), orientation = Orientation.Vertical)
+            .verticalScroll(rememberScrollState())
     )
 }
 
@@ -158,7 +165,7 @@ internal fun SettingsScreen(
                 .fillMaxWidth(0.6f)
                 .align(Alignment.CenterHorizontally)
             ) {
-                Column(modifier = Modifier.weight(0.2f)) {
+                Column(modifier = Modifier.weight(0.1f)) {
                     Box(
                         modifier = Modifier
                             .size(boxHeight)
@@ -166,16 +173,15 @@ internal fun SettingsScreen(
                             .background(color)
                     )
                 }
-                Column(modifier = Modifier.weight(0.6f)) {
+                Column(modifier = Modifier.weight(0.5f)) {
                     Text(
                         text = name,
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(start = 20.dp)
                     )
                 }
-                Column(modifier = Modifier.weight(0.2f)) {
+                Column(modifier = Modifier.weight(0.4f)) {
                     Text(
-                        text = value.toInt().toString(),
+                        text = data.bytesToHuman(value.toLong()),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.End)
                     )
@@ -188,7 +194,7 @@ internal fun SettingsScreen(
             text={ Text(stringResource(R.string.settings_storage_button_clear)) },
             modifier= Modifier
                 .align(Alignment.End)
-                .padding(top = 24.dp),
+                .padding(top = 24.dp, bottom = 8.dp),
         )
     }
 }
