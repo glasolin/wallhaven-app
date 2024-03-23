@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ShortText
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Upcoming
@@ -17,6 +18,8 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Grid3x3
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Upcoming
@@ -32,6 +35,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -125,13 +129,15 @@ object AppIcons {
     val MoreVert = Icons.Default.MoreVert
     val Person = Icons.Rounded.Person
     val Search = Icons.Rounded.Search
+    var Site = Icons.Rounded.Public
     val Settings = Icons.Rounded.Settings
+    val ClearCache = Icons.Filled.Delete
+    val Reload = Icons.Rounded.Refresh
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
     val Upcoming = Icons.Rounded.Upcoming
     val UpcomingBorder = Icons.Outlined.Upcoming
     val ViewDay = Icons.Rounded.ViewDay
 }
-
 
 @VisibleForTesting
 val LightDefaultColorScheme = lightColorScheme(
@@ -162,9 +168,6 @@ val LightDefaultColorScheme = lightColorScheme(
     outline = Colors.PurpleGray50,
 )
 
-/**
- * Dark default theme color scheme
- */
 @VisibleForTesting
 val DarkDefaultColorScheme = darkColorScheme(
     primary = Colors.Purple80,
@@ -192,70 +195,6 @@ val DarkDefaultColorScheme = darkColorScheme(
     inverseSurface = Colors.DarkPurpleGray90,
     inverseOnSurface = Colors.DarkPurpleGray10,
     outline = Colors.PurpleGray60,
-)
-
-/**
- * Light Android theme color scheme
- */
-@VisibleForTesting
-val LightAndroidColorScheme = lightColorScheme(
-    primary = Colors.Green40,
-    onPrimary = Colors.White,
-    primaryContainer = Colors.Green90,
-    onPrimaryContainer = Colors.Green10,
-    secondary = Colors.DarkGreen40,
-    onSecondary = Colors.White,
-    secondaryContainer = Colors.DarkGreen90,
-    onSecondaryContainer = Colors.DarkGreen10,
-    tertiary = Colors.Teal40,
-    onTertiary = Color.White,
-    tertiaryContainer = Colors.Teal90,
-    onTertiaryContainer = Colors.Teal10,
-    error = Colors.Red40,
-    onError = Color.White,
-    errorContainer = Colors.Red90,
-    onErrorContainer = Colors.Red10,
-    background = Colors.DarkGreenGray99,
-    onBackground = Colors.DarkGreenGray10,
-    surface = Colors.DarkGreenGray99,
-    onSurface = Colors.DarkGreenGray10,
-    surfaceVariant = Colors.GreenGray90,
-    onSurfaceVariant = Colors.GreenGray30,
-    inverseSurface = Colors.DarkGreenGray20,
-    inverseOnSurface = Colors.DarkGreenGray95,
-    outline = Colors.GreenGray50,
-)
-
-/**
- * Dark Android theme color scheme
- */
-@VisibleForTesting
-val DarkAndroidColorScheme = darkColorScheme(
-    primary = Colors.Green80,
-    onPrimary = Colors.Green20,
-    primaryContainer = Colors.Green30,
-    onPrimaryContainer = Colors.Green90,
-    secondary = Colors.DarkGreen80,
-    onSecondary = Colors.DarkGreen20,
-    secondaryContainer = Colors.DarkGreen30,
-    onSecondaryContainer = Colors.DarkGreen90,
-    tertiary = Colors.Teal80,
-    onTertiary = Colors.Teal20,
-    tertiaryContainer = Colors.Teal30,
-    onTertiaryContainer = Colors.Teal90,
-    error = Colors.Red80,
-    onError = Colors.Red20,
-    errorContainer = Colors.Red30,
-    onErrorContainer = Colors.Red90,
-    background = Colors.DarkGreenGray10,
-    onBackground = Colors.DarkGreenGray90,
-    surface = Colors.DarkGreenGray10,
-    onSurface = Colors.DarkGreenGray90,
-    surfaceVariant = Colors.GreenGray30,
-    onSurfaceVariant = Colors.GreenGray80,
-    inverseSurface = Colors.DarkGreenGray90,
-    inverseOnSurface = Colors.DarkGreenGray10,
-    outline = Colors.GreenGray60,
 )
 
 internal val Typography = Typography(
@@ -390,6 +329,25 @@ data class BackgroundTheme(
     val tonalElevation: Dp = Dp.Unspecified,
 )
 
+open class PieChartColors(
+    val colorFree:Color=Color.Unspecified,
+    val colorCache:Color=Color.Unspecified,
+    val colorFavorites:Color=Color.Unspecified,
+)
+object StoragePieChartDarkColors:PieChartColors(
+    Colors.Blue40,
+    Colors.Purple80,
+    Colors.DarkPurpleGray90,
+)
+
+object StoragePieChartLightColors:PieChartColors(
+    Colors.Blue40,
+    Colors.Purple80,
+    Colors.Orange40,
+)
+
+val LocalStoragePieChartColors = compositionLocalOf { PieChartColors() }
+
 /**
  * A composition local for [BackgroundTheme].
  */
@@ -443,15 +401,11 @@ val LocalTintTheme = staticCompositionLocalOf { TintTheme() }
 @Composable
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    androidTheme: Boolean = false,
-    disableDynamicTheming: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     // Color scheme
-    val colorScheme = when {
-        androidTheme -> if (darkTheme) DarkAndroidColorScheme else LightAndroidColorScheme
-        else -> if (darkTheme) DarkDefaultColorScheme else LightDefaultColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkDefaultColorScheme else LightDefaultColorScheme
+
     // Gradient colors
     val emptyGradientColors = GradientColors(container = colorScheme.surfaceColorAtElevation(2.dp))
     val defaultGradientColors = GradientColors(
@@ -459,28 +413,25 @@ fun AppTheme(
         bottom = colorScheme.primaryContainer,
         container = colorScheme.surface,
     )
-    val gradientColors = when {
-        androidTheme -> if (darkTheme) DarkAndroidGradientColors else LightAndroidGradientColors
-        else -> defaultGradientColors
-    }
+    val gradientColors = defaultGradientColors
+
     // Background theme
     val defaultBackgroundTheme = BackgroundTheme(
         color = colorScheme.surface,
         tonalElevation = 2.dp,
     )
-    val backgroundTheme = when {
-        androidTheme -> if (darkTheme) DarkAndroidBackgroundTheme else LightAndroidBackgroundTheme
-        else -> defaultBackgroundTheme
-    }
-    val tintTheme = when {
-        androidTheme -> TintTheme()
-        else -> TintTheme()
-    }
+    val backgroundTheme = defaultBackgroundTheme
+
+    val storagePieChartTheme = if (darkTheme) StoragePieChartLightColors else StoragePieChartDarkColors
+
+    val tintTheme = TintTheme()
+
     // Composition locals
     CompositionLocalProvider(
         LocalGradientColors provides gradientColors,
         LocalBackgroundTheme provides backgroundTheme,
         LocalTintTheme provides tintTheme,
+        LocalStoragePieChartColors provides storagePieChartTheme,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -489,3 +440,4 @@ fun AppTheme(
         )
     }
 }
+

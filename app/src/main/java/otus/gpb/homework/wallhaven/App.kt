@@ -34,12 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -54,8 +49,10 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import otus.gpb.homework.wallhaven.ui.UiState
 import otus.gpb.homework.wallhaven.ui.navigation.AppNavHost
 import otus.gpb.homework.wallhaven.ui.navigation.Navigation
+import otus.gpb.homework.wallhaven.ui.navigation.TitleBarItems
 import otus.gpb.homework.wallhaven.ui.theme.AppIcons
 import otus.gpb.homework.wallhaven.ui.theme.Background
 
@@ -76,9 +73,9 @@ fun App(state: UiState) {
             bottomBar = {
                 if (state.shouldShowBottomBar) {
                     AppBottomBar(
-                        destinations = state.topLevelDestinations,
-                        onNavigateToDestination = state::navigateToTopLevelDestination,
-                        currentDestination = state.destination,
+                        destinations = state.screensList,
+                        onNavigateToDestination = state::navigate,
+                        currentRoute = state.currentRoute,
                         modifier = Modifier.testTag("BottomBar"),
                     )
                 }
@@ -97,9 +94,9 @@ fun App(state: UiState) {
             ) {
                 if (state.shouldShowNavRail) {
                     AppNavRail(
-                        destinations = state.topLevelDestinations,
-                        onNavigateToDestination = state::navigateToTopLevelDestination,
-                        currentDestination = state.destination,
+                        destinations = state.screensList,
+                        onNavigateToDestination = state::navigate,
+                        currentRoute = state.currentRoute,
                         modifier = Modifier
                             .testTag("NavRail")
                             .safeDrawingPadding(),
@@ -108,24 +105,9 @@ fun App(state: UiState) {
 
                 Column(Modifier.fillMaxSize()) {
                     // Show the top app bar on top level destinations.
-                    val destination = state.currentTopLevelDestination
-                    if (destination != null) {
-                        AppTopAppBar(
-                            titleRes = destination.titleTextId,
-                            navigationIcon = AppIcons.Search,
-                            navigationIconContentDescription = stringResource(
-                                id = R.string.feature_settings_top_app_bar_navigation_icon_description,
-                            ),
-                            actionIcon = AppIcons.Settings,
-                            actionIconContentDescription = stringResource(
-                                id = R.string.feature_settings_top_app_bar_action_icon_description,
-                            ),
-                            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                                containerColor = Color.Transparent,
-                            ),
-                            onActionClick = {  },
-                            onNavigationClick = { state.navigateToTopLevelDestination(Navigation.MAIN) },
-                        )
+                    val screen = state.currentScreen
+                    if (screen != null) {
+                        AppTitleBar(currentScreen = screen, state = state)
                     }
 
                     AppNavHost(
@@ -144,16 +126,69 @@ fun App(state: UiState) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppTitleBar(
+    state: UiState,
+    currentScreen: Navigation?,
+    modifier: Modifier = Modifier,
+) {
+    var navigationIcon: ImageVector? = null
+    var navigationIconContentDescription:String = ""
+    var onNavigationClick: () -> Unit = {}
+
+    var titleRes:Int = 0
+    var actions = mutableListOf<Triple<ImageVector,String,() -> Unit>>()
+
+    if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.RELOAD)) {
+        navigationIcon = AppIcons.Reload
+        navigationIconContentDescription = stringResource(R.string.title_bar_reload)
+        onNavigationClick={ state.reloadMainGrid() }
+    }
+    if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.BACK)) {
+        navigationIcon = AppIcons.Reload
+        navigationIconContentDescription = stringResource(R.string.title_bar_reload)
+        onNavigationClick = { state.navigateBack() }
+    }
+    if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.TITLE)) {
+        titleRes=currentScreen.titleTextId
+    }
+
+    currentScreen?.titleBarItemsIds!!.forEach {
+        when (it) {
+            TitleBarItems.SITE -> {
+                actions.add(Triple(
+                    AppIcons.Site,
+                    stringResource(R.string.title_bar_site),
+                    state::openWallhavenSite
+                ))
+            }
+            else -> {}
+        }
+    }
+
+    AppTopAppBar(
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = Color.Transparent,
+        ),
+        navigationIcon = navigationIcon,
+        navigationIconContentDescription = navigationIconContentDescription,
+        onNavigationClick = onNavigationClick,
+        actions = actions,
+        titleRes = titleRes,
+    )
+}
+
 @Composable
 private fun AppNavRail(
     destinations: List<Navigation>,
     onNavigateToDestination: (Navigation) -> Unit,
-    currentDestination: NavDestination?,
+    currentRoute: NavDestination?,
     modifier: Modifier = Modifier,
 ) {
     NavigationRail(modifier = modifier) {
         destinations.forEach { destination ->
-            val selected = currentDestination.isTopLevelDestinationInHierarchy(destination)
+            val selected = currentRoute.isTopLevelDestinationInHierarchy(destination)
             NavigationRailItem(
                 selected = selected,
                 onClick = { onNavigateToDestination(destination) },
@@ -179,7 +214,7 @@ private fun AppNavRail(
 private fun AppBottomBar(
     destinations: List<Navigation>,
     onNavigateToDestination: (Navigation) -> Unit,
-    currentDestination: NavDestination?,
+    currentRoute: NavDestination?,
     modifier: Modifier = Modifier,
 ) {
     NavigationBar(
@@ -188,7 +223,7 @@ private fun AppBottomBar(
         tonalElevation = 0.dp,
     ) {
         destinations.forEach { destination ->
-            val selected = currentDestination.isTopLevelDestinationInHierarchy(destination)
+            val selected = currentRoute.isTopLevelDestinationInHierarchy(destination)
             NavigationBarItem(
                 selected = selected,
                 onClick = { onNavigateToDestination(destination) },
@@ -331,36 +366,39 @@ fun RowScope.NavigationBarItem(
 @Composable
 fun AppTopAppBar(
     @StringRes titleRes: Int,
-    navigationIcon: ImageVector,
+    navigationIcon: ImageVector?,
     navigationIconContentDescription: String,
-    actionIcon: ImageVector,
-    actionIconContentDescription: String,
+    actions:List<Triple<ImageVector,String,() -> Unit>>,
     modifier: Modifier = Modifier,
     colors: TopAppBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
     onNavigationClick: () -> Unit = {},
-    onActionClick: () -> Unit = {},
 ) {
     CenterAlignedTopAppBar(
         title = { Text(text = stringResource(id = titleRes)) },
-        navigationIcon = {
-            IconButton(onClick = onNavigationClick) {
-                Icon(
-                    imageVector = navigationIcon,
-                    contentDescription = navigationIconContentDescription,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
+        navigationIcon =  {
+            if (navigationIcon!=null) {
+                IconButton(onClick = onNavigationClick) {
+                    Icon(
+                        imageVector = navigationIcon,
+                        contentDescription = navigationIconContentDescription,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
         },
         actions = {
-            IconButton(onClick = onActionClick) {
-                Icon(
-                    imageVector = actionIcon,
-                    contentDescription = actionIconContentDescription,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
+            actions.forEach() {
+                val (actionIcon,actionIconContentDescription,onActionClick)=it
+                IconButton(onClick = onActionClick) {
+                    Icon(
+                        imageVector = actionIcon,
+                        contentDescription = actionIconContentDescription,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
         },
         colors = colors,
-        modifier = modifier.testTag("niaTopAppBar"),
+        modifier = modifier.testTag("TopAppBar"),
     )
 }

@@ -1,30 +1,18 @@
 package otus.gpb.homework.wallhaven
 
-import android.app.Application
 import android.content.Context
-import android.service.autofill.UserData
-import androidx.datastore.preferences.core.preferencesOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import otus.gpb.homework.wallhaven.ui.UiData
+import otus.gpb.homework.wallhaven.ui.UiState
 import javax.inject.Inject
 import javax.inject.Singleton
-
-data class UiData(
-    var todo:String="todo"
-)
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -38,7 +26,7 @@ object SettingsModule {
 object UiDataModule {
     @Provides
     @Singleton
-    fun provideUiData()=UiData()
+    fun provideUiData()= UiData()
 }
 
 @HiltViewModel
@@ -48,17 +36,18 @@ class MainActivityViewModel @Inject constructor(
     private val data: UiData,
     private val state: UiState = UiState(),
 ) : ViewModel() {
-    private val contextLiveData = MutableLiveData<Context>()
+    private val context = MutableLiveData<Context>()
 
     init {
-        contextLiveData.observeForever { context ->
+        context.observeForever { context ->
             // Do something with context
             settings.setContext(context)
+            state.setContext(context)
         }
         settings.load()
     }
     fun setContext(context: Context) {
-        contextLiveData.value = context
+        this.context.value = context
     }
 
     fun settingsLoaded():Boolean {
@@ -72,6 +61,6 @@ class MainActivityViewModel @Inject constructor(
 
     fun settings():Settings=settings
     fun data():UiData=data
-    fun state():UiState=state
+    fun state(): UiState =state
 }
 

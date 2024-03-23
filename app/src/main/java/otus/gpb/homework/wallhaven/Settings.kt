@@ -30,6 +30,7 @@ enum class SettingsStatus {
 @Serializable
 data class SettingsData (
     var theme:Themes = Themes.SYSTEM,
+    var apiKey:String = "",
 )
 
 class Settings {
@@ -49,8 +50,18 @@ class Settings {
         }
     }
 
+    var apiKey = MutableLiveData<String>(preferences.apiKey).apply {
+        observeForever {
+            if (preferences.apiKey!=it) {
+                preferences.apiKey=it
+                store()
+            }
+        }
+    }
+
     private fun applySettings() {
         theme.value=preferences.theme
+        apiKey.value=preferences.apiKey
     }
 
     private fun store() {

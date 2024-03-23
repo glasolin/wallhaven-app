@@ -14,4 +14,13 @@
     <string name="settings_theme_light">Light theme</string>
     <string name="settings_theme_system">System theme</string>
     <string name="settings_theme_section">Theme</string>
+    <string name="title_bar_reload">Refresh</string>
+    <string name="title_bar_site">https://wallhaven.cc</string>
+    <string name="settings_api_key_section">API Key</string>
+    <string name="settings_api_key_label">API Key</string>
+    <string name="settings_storage_section">Storage Usage</string>
+    <string name="settings_storage_favorites">Favorites</string>
+    <string name="settings_storage_cache">Cache</string>
+    <string name="settings_storage_free">Free</string>
+    <string name="settings_storage_button_clear">Clear cache</string>
 </resources>
