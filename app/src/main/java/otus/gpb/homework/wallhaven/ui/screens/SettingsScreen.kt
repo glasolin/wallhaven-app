@@ -155,7 +155,7 @@ internal fun SettingsScreen(
             val (name,value,color)=item
             Row(modifier = Modifier
                 .padding(top = 10.dp)
-                .fillMaxWidth(0.5f)
+                .fillMaxWidth(0.6f)
                 .align(Alignment.CenterHorizontally)
             ) {
                 Column(modifier = Modifier.weight(0.2f)) {
