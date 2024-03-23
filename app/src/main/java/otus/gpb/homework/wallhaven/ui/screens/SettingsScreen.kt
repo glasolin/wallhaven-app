@@ -49,6 +49,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -69,7 +70,7 @@ import otus.gpb.homework.wallhaven.Settings
 import otus.gpb.homework.wallhaven.Themes
 import otus.gpb.homework.wallhaven.ui.UiData
 import otus.gpb.homework.wallhaven.ui.navigation.SETTINGS_ROUTE
-import otus.gpb.homework.wallhaven.ui.storeDataTypes
+import otus.gpb.homework.wallhaven.ui.StoreDataTypes
 import otus.gpb.homework.wallhaven.ui.theme.AppIcons
 import otus.gpb.homework.wallhaven.ui.theme.AppTheme
 import otus.gpb.homework.wallhaven.ui.theme.Colors
@@ -128,26 +129,26 @@ internal fun SettingsScreen(
         )
 
         SettingsSectionTitle(stringResource(R.string.settings_storage_section))
-        var selectedPieItem by remember { mutableStateOf(storeDataTypes.NONE) }
+        var selectedPieItem by remember { mutableStateOf(StoreDataTypes.NONE) }
 
         val pieData=mapOf(
-            storeDataTypes.FAVORITES to Triple(
+            StoreDataTypes.FAVORITES to Triple(
                 stringResource(R.string.settings_storage_favorites),
-                data.storeUsage.value[storeDataTypes.FAVORITES]!!.toFloat(),
+                data.storeUsage.value[StoreDataTypes.FAVORITES]!!.toFloat(),
                 LocalStoragePieChartColors.current.colorFavorites,
             ),
-            storeDataTypes.CACHE to Triple(
+            StoreDataTypes.CACHE to Triple(
                 stringResource(R.string.settings_storage_cache),
-                data.storeUsage.value[storeDataTypes.CACHE]!!.toFloat(),
+                data.storeUsage.value[StoreDataTypes.CACHE]!!.toFloat(),
                 LocalStoragePieChartColors.current.colorCache,
             ),
-            storeDataTypes.FREE to Triple(
+            StoreDataTypes.FREE to Triple(
                 stringResource(R.string.settings_storage_free),
-                data.storeUsage.value[storeDataTypes.FREE]!!.toFloat(),
+                data.storeUsage.value[StoreDataTypes.FREE]!!.toFloat(),
                 LocalStoragePieChartColors.current.colorFree,
             )
         )
-        PieChart<storeDataTypes>(
+        PieChart<StoreDataTypes>(
             modifier= Modifier
                 .fillMaxWidth(0.5f)
                 .align(Alignment.CenterHorizontally),
@@ -254,14 +255,14 @@ fun SettingsThemeChooserRow(
     }
 }
 
-@Preview
+@Preview(apiLevel = 33)
 @Composable
-private fun PreviewSettingsSecreen() {
+private fun PreviewSettingsScreen() {
     AppTheme {
         SettingsScreen(
             modifier = Modifier,
             settings= Settings(),
-            data= UiData(),
+            data= UiData().apply { setContext(LocalContext.current) },
         )
     }
 }

@@ -29,4 +29,5 @@
     <string name="size_Gb">%d GB</string>
     <string name="size_Tb">%d TB</string>
     <string name="size_Pb">%d PB</string>
+    <string name="size_Eb">%d EB</string>
 </resources>
