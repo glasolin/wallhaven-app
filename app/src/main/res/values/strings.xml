@@ -30,4 +30,14 @@
     <string name="size_Tb">%d TB</string>
     <string name="size_Pb">%d PB</string>
     <string name="size_Eb">%d EB</string>
+    <string name="main_search_by_tag">Search by tag</string>
+    <string name="main_filters">Filters</string>
+    <string name="navigation_filters">Filters</string>
+    <string name="title_bar_back">Back</string>
+    <string name="main_sorting_date_added">Date Added</string>
+    <string name="main_sorting_relevance">Relevance</string>
+    <string name="main_sorting_random">Random</string>
+    <string name="main_sorting_views">Views</string>
+    <string name="main_sorting_favorites">Favorites</string>
+    <string name="main_sorting_toplist">Top List</string>
 </resources>

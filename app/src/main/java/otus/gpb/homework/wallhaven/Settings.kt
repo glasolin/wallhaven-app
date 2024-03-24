@@ -19,6 +19,7 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 
+
 enum class Themes {
     SYSTEM, LIGHT, DARK
 }
@@ -27,10 +28,16 @@ enum class SettingsStatus {
     NONE, READY, LOADING, STORING, PENDING
 }
 
+enum class Sorting {
+    DATE_ADDED, RELEVANCE, RANDOM, VIEWS, FAVORITES, TOPLIST
+}
+
 @Serializable
 data class SettingsData (
     var theme:Themes = Themes.SYSTEM,
     var apiKey:String = "",
+    var sorting:Sorting=Sorting.DATE_ADDED,
+    var sortingDesc:Boolean=true,
 )
 
 class Settings {
@@ -41,29 +48,50 @@ class Settings {
     private var preferences = SettingsData()
     private var context:Context?=null
 
-    var theme = MutableLiveData<Themes>(preferences.theme).apply {
-        observeForever {
-            if (preferences.theme!=it) {
-                preferences.theme=it
-                store()
-            }
-        }
+     var theme = storeObserver<Themes>(preferences.theme,"theme") {v->
+        preferences.theme=v
     }
-
-    var apiKey = MutableLiveData<String>(preferences.apiKey).apply {
-        observeForever {
-            if (preferences.apiKey!=it) {
-                preferences.apiKey=it
-                store()
-            }
-        }
+    var sorting = storeObserver<Sorting>(preferences.sorting,"sorting") {v->
+        preferences.sorting=v
+    }
+    var sortingDesc = storeObserver<Boolean>(preferences.sortingDesc,"sortingDesc") {v->
+        preferences.sortingDesc=v
+    }
+    var apiKey = storeObserver<String>(preferences.apiKey,"apiKey") {v->
+        preferences.apiKey=v
     }
 
     private fun applySettings() {
+        Log.d(tag, "applying preferences...")
         theme.value=preferences.theme
         apiKey.value=preferences.apiKey
+        sorting.value=preferences.sorting
+        sortingDesc.value=preferences.sortingDesc
+        Log.d(tag, "applying done")
     }
 
+    private fun <T> storeObserver(data:T,description:String="", onChange:(v:T) -> Unit):MutableLiveData<T> {
+        return MutableLiveData<T>(data).apply {
+            observeForever {
+                if (description.isNotEmpty()) {
+                    Log.d(tag, "changed ${description} to ${it}")
+                } else {
+                    Log.d(tag, "changed to ${it}")
+                }
+                onChange(it)
+                if (isLoaded()) {
+                    smartStore(data, it)
+                }
+            }
+        }
+    }
+
+    private fun <T> smartStore(old:T,new:T ) {
+        if (old!=new) {
+
+            store()
+        }
+    }
     private fun store() {
         if (context == null) {
             Log.d(tag, "context not set")
@@ -76,6 +104,7 @@ class Settings {
             Log.d(tag, "storing...")
             status = SettingsStatus.STORING
             val json = Json.encodeToString(preferences)
+            Log.d(tag, json)
             val ctx=context
             runBlocking {
                 launch {
@@ -133,12 +162,13 @@ class Settings {
                     try {
                         if (it != null) {
                             preferences = Json.decodeFromString<SettingsData>(it)
+                            applySettings()
                         }
                     } catch (e: Exception) {
+                        Log.d(tag, "loading failed")
                         Log.d(tag, e.message.toString())
                     } finally {
                         Log.d(tag, "loaded")
-                        applySettings()
                         status = SettingsStatus.READY
                     }
                 }

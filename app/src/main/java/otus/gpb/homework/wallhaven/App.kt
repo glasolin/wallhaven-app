@@ -146,8 +146,8 @@ private fun AppTitleBar(
         onNavigationClick={ state.reloadMainGrid() }
     }
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.BACK)) {
-        navigationIcon = AppIcons.Reload
-        navigationIconContentDescription = stringResource(R.string.title_bar_reload)
+        navigationIcon = AppIcons.ArrowBack
+        navigationIconContentDescription = stringResource(R.string.title_bar_back)
         onNavigationClick = { state.navigateBack() }
     }
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.TITLE)) {
@@ -222,7 +222,7 @@ private fun AppBottomBar(
         contentColor = NavigationDefaults.navigationContentColor(),
         tonalElevation = 0.dp,
     ) {
-        destinations.forEach { destination ->
+        destinations.filter{it.visible}.forEach { destination ->
             val selected = currentRoute.isTopLevelDestinationInHierarchy(destination)
             NavigationBarItem(
                 selected = selected,

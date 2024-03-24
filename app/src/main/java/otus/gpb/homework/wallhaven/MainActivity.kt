@@ -36,15 +36,14 @@ import otus.gpb.homework.wallhaven.ui.theme.AppTheme
 import otus.gpb.homework.wallhaven.ui.theme.Background
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
     private val tag = "MainActivity"
     private val viewModel by viewModels<MainActivityViewModel>()
 
-
-    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.setContext(applicationContext)
+
         Log.d(tag, "installing splash screen")
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition {
@@ -61,6 +60,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun drawStub() {
         setContent {
+            viewModel.setCoroutineScope(rememberCoroutineScope())
             CompositionLocalProvider(
             ) {
                     Box() {
@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             val darkTheme = shouldUseDarkTheme(viewModel.settings())
+            viewModel.setCoroutineScope(rememberCoroutineScope())
 
             // Update the edge to edge configuration to match the theme
             // This is the same parameters as the default enableEdgeToEdge call, but we manually
@@ -94,7 +95,6 @@ class MainActivity : AppCompatActivity() {
                 onDispose {}
             }
             viewModel.state().windowSizeClass=calculateWindowSizeClass(this)
-            viewModel.state().coroutineScope=rememberCoroutineScope()
             viewModel.state().navController= rememberNavController()
 
             CompositionLocalProvider(

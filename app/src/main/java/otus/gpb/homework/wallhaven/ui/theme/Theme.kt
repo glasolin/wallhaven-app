@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ShortText
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Upcoming
@@ -131,8 +134,11 @@ object AppIcons {
     val Search = Icons.Rounded.Search
     var Site = Icons.Rounded.Public
     val Settings = Icons.Rounded.Settings
+    val SortAsc = Icons.Filled.ArrowDownward
+    val SortDesc = Icons.Filled.ArrowUpward
     val ClearCache = Icons.Filled.Delete
     val Reload = Icons.Rounded.Refresh
+    val Filter = Icons.Filled.FilterAlt
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
     val Upcoming = Icons.Rounded.Upcoming
     val UpcomingBorder = Icons.Outlined.Upcoming

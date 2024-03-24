@@ -3,6 +3,7 @@ package otus.gpb.homework.wallhaven.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -12,27 +13,26 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navOptions
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import otus.gpb.homework.wallhaven.ui.navigation.FAVORITES_ROUTE
+import otus.gpb.homework.wallhaven.ui.navigation.FILTERS_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.MAIN_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.Navigation
 import otus.gpb.homework.wallhaven.ui.navigation.SETTINGS_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.WALLHAVEN_SITE_ROUTE
 import otus.gpb.homework.wallhaven.ui.screens.navigateToFavorites
+import otus.gpb.homework.wallhaven.ui.screens.navigateToFilters
 import otus.gpb.homework.wallhaven.ui.screens.navigateToMain
 import otus.gpb.homework.wallhaven.ui.screens.navigateToSettings
 import javax.inject.Inject
 
-class UiState @Inject constructor() {
-
+class UiState constructor() {
     private var context:Context?=null
         get() {requireNotNull(field){println("Context was not initialized")};return field}
 
     var navController: NavHostController? = null
         get() {requireNotNull(field){println("Nav controller was not initialized")};return field}
-
-    var coroutineScope: CoroutineScope? = null
-        get() {requireNotNull(field){println("Coroutine scope was not initialized")};return field}
 
     var windowSizeClass: WindowSizeClass? = null
         get() {requireNotNull(field){println("Window Size Class scope was not initialized")};return field}
@@ -45,6 +45,7 @@ class UiState @Inject constructor() {
             MAIN_ROUTE -> Navigation.MAIN
             FAVORITES_ROUTE -> Navigation.FAVORITES
             SETTINGS_ROUTE -> Navigation.SETTINGS
+            FILTERS_ROUTE -> Navigation.FILTERS
             else -> null
         }
 
@@ -55,6 +56,10 @@ class UiState @Inject constructor() {
         get() = !shouldShowBottomBar
 
     val screensList: List<Navigation> = Navigation.entries
+
+    fun setContext(context: Context) {
+        this.context=context
+    }
 
     fun navigate(screen: Navigation) {
         trace("Navigation: ${screen.name}") {
@@ -70,6 +75,7 @@ class UiState @Inject constructor() {
                 Navigation.MAIN -> navController!!.navigateToMain(screenOptions)
                 Navigation.FAVORITES -> navController!!.navigateToFavorites(screenOptions)
                 Navigation.SETTINGS -> navController!!.navigateToSettings(screenOptions)
+                Navigation.FILTERS -> navController!!.navigateToFilters(screenOptions)
             }
         }
     }
@@ -79,7 +85,7 @@ class UiState @Inject constructor() {
     }
 
     fun navigateBack() {
-        TODO("Not yet implemented")
+        navController!!.navigateUp()
     }
 
     //@Composable
@@ -89,9 +95,4 @@ class UiState @Inject constructor() {
         }
         context!!.startActivity(intent)
     }
-
-    fun setContext(context: Context) {
-        this.context=context
-    }
-
 }

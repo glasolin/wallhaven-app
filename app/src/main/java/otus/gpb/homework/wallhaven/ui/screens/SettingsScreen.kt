@@ -29,6 +29,8 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.FloatingActionButtonElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -71,11 +73,12 @@ import otus.gpb.homework.wallhaven.Themes
 import otus.gpb.homework.wallhaven.ui.UiData
 import otus.gpb.homework.wallhaven.ui.navigation.SETTINGS_ROUTE
 import otus.gpb.homework.wallhaven.ui.StoreDataTypes
+import otus.gpb.homework.wallhaven.ui.assets.DropdownMenuBox
+import otus.gpb.homework.wallhaven.ui.assets.PieChart
 import otus.gpb.homework.wallhaven.ui.theme.AppIcons
 import otus.gpb.homework.wallhaven.ui.theme.AppTheme
 import otus.gpb.homework.wallhaven.ui.theme.Colors
 import otus.gpb.homework.wallhaven.ui.theme.LocalStoragePieChartColors
-import otus.gpb.homework.wallhaven.ui.theme.StoragePieChartLightColors
 import kotlin.math.min
 
 
@@ -100,6 +103,18 @@ internal fun SettingsRoute(
             //.scrollable(state = rememberScrollState(), orientation = Orientation.Vertical)
             .verticalScroll(rememberScrollState())
     )
+}
+
+@Preview
+@Composable
+private fun PreviewSettingsScreen() {
+    AppTheme {
+        SettingsScreen(
+            modifier = Modifier,
+            settings= Settings(),
+            data= UiData().apply { setContext(LocalContext.current) },
+        )
+    }
 }
 
 @Composable
@@ -193,6 +208,7 @@ internal fun SettingsScreen(
             onClick = {data.clearStorage()},
             icon = { Icon(AppIcons.ClearCache,"") },
             text={ Text(stringResource(R.string.settings_storage_button_clear)) },
+            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
             modifier= Modifier
                 .align(Alignment.End)
                 .padding(top = 24.dp, bottom = 8.dp),
@@ -255,131 +271,4 @@ fun SettingsThemeChooserRow(
     }
 }
 
-@Preview(apiLevel = 33)
-@Composable
-private fun PreviewSettingsScreen() {
-    AppTheme {
-        SettingsScreen(
-            modifier = Modifier,
-            settings= Settings(),
-            data= UiData().apply { setContext(LocalContext.current) },
-        )
-    }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun <T> DropdownMenuBox(
-    items: Map<T,String>,
-    selected: T,
-    onSelect: (selectedItem: T) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedItem by remember { mutableStateOf(selected) }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = {
-                expanded = !expanded
-            }
-        ) {
-            TextField(
-                value = items[selected]!!,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor()
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                items.forEach { (id, item) ->
-                    DropdownMenuItem(
-                        text = { Text(text = item) },
-                        onClick = {
-                            selectedItem=id
-                            expanded = false
-                            onSelect(id)
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun <T> PieChart(
-    modifier: Modifier = Modifier,
-    data: Map<T,Triple<String, Float, Color>>,
-    animated: Boolean = true,
-    selected: T,
-    onSelect: (selectedItem: T) -> Unit,
-) {
-    val chartDegrees = 360f // circle shape
-    var startAngle = 270f // top to right
-
-    val colors = mutableListOf<Color>()
-    val names = mutableListOf<String>()
-    val values= mutableListOf<Float>()
-
-    data.forEach() { (id,item) ->
-        val (name,value,color)=item
-        colors.add(color)
-        names.add(name)
-        values.add(value)
-    }
-
-    var total=values.sum()
-    val proportions = values.map {v ->
-        v * 100 / total
-    }
-
-    // calculate each input slice degrees
-    val angleProgress = proportions.map {v ->
-        chartDegrees * v / 100
-    }
-
-    // calculate each slice end point in degrees, for handling click position
-    val progressSize = mutableListOf<Float>()
-
-    LaunchedEffect(angleProgress){
-        progressSize.add(angleProgress.first())
-        for (x in 1 until angleProgress.size) {
-            progressSize.add(angleProgress[x] + progressSize[x - 1])
-        }
-    }
-    BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
-
-        val canvasSize = min(constraints.maxWidth, constraints.maxHeight)
-        val size = Size(canvasSize.toFloat(), canvasSize.toFloat())
-        val canvasSizeDp = with(LocalDensity.current) { canvasSize.toDp() }
-
-        Canvas(modifier = Modifier.size(canvasSizeDp)) {
-
-            angleProgress.forEachIndexed { index, angle ->
-                drawArc(
-                    color = colors[index],
-                    startAngle = startAngle,
-                    sweepAngle = angle,
-                    useCenter = true,
-                    size = size,
-                    style = Fill
-                )
-                startAngle += angle
-            }
-        }
-    }
-}
-
-private fun Int.textDp(density: Density): TextUnit = with(density) {
-    this@textDp.dp.toSp()
-}
-
-val Int.textDp: TextUnit
-    @Composable get() =  this.textDp(density = LocalDensity.current)
