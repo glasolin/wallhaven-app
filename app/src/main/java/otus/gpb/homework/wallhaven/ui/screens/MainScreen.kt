@@ -1,8 +1,10 @@
 package otus.gpb.homework.wallhaven.ui.screens
 
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -35,7 +37,6 @@ import androidx.navigation.compose.composable
 import otus.gpb.homework.wallhaven.MainActivityViewModel
 import otus.gpb.homework.wallhaven.R
 import otus.gpb.homework.wallhaven.Settings
-import otus.gpb.homework.wallhaven.Sorting
 import otus.gpb.homework.wallhaven.ui.UiData
 import otus.gpb.homework.wallhaven.ui.UiState
 import otus.gpb.homework.wallhaven.ui.assets.DrawableButton
@@ -44,6 +45,8 @@ import otus.gpb.homework.wallhaven.ui.navigation.MAIN_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.Navigation
 import otus.gpb.homework.wallhaven.ui.theme.AppIcons
 import otus.gpb.homework.wallhaven.ui.theme.AppTheme
+import otus.gpb.homework.wallhaven.wh.WHOrder
+import otus.gpb.homework.wallhaven.wh.WHSorting
 
 
 fun NavController.navigateToMain(navOptions: NavOptions) = navigate(MAIN_ROUTE, navOptions)
@@ -156,12 +159,12 @@ internal fun MainSorting(
     modifier: Modifier = Modifier,
 ) {
     val items=mapOf(
-        Sorting.DATE_ADDED to stringResource(R.string.main_sorting_date_added),
-        Sorting.RELEVANCE to stringResource(R.string.main_sorting_relevance),
-        Sorting.RANDOM to stringResource(R.string.main_sorting_random),
-        Sorting.VIEWS to stringResource(R.string.main_sorting_views),
-        Sorting.FAVORITES to stringResource(R.string.main_sorting_favorites),
-        Sorting.TOPLIST to stringResource(R.string.main_sorting_toplist),
+        WHSorting.DATE_ADDED to stringResource(R.string.main_sorting_date_added),
+        WHSorting.RELEVANCE to stringResource(R.string.main_sorting_relevance),
+        WHSorting.RANDOM to stringResource(R.string.main_sorting_random),
+        WHSorting.VIEWS to stringResource(R.string.main_sorting_views),
+        WHSorting.FAVORITES to stringResource(R.string.main_sorting_favorites),
+        WHSorting.TOPLIST to stringResource(R.string.main_sorting_toplist),
     )
     Row(modifier=modifier) {
         Column(
@@ -181,10 +184,11 @@ internal fun MainSorting(
                 .padding(start= 8.dp)
         ) {
             FloatingActionButton(
-                onClick = { settings.sortingDesc.value = !(settings.sortingDesc.value!!) },
+
+                onClick = { settings.order.value = WHOrder.switch(settings.order.value!!) },
                 elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
             ) {
-                val icon = if (settings.sortingDesc.observeAsState().value!!) {
+                val icon = if (settings.order.observeAsState().value!! == WHOrder.DESC) {
                     AppIcons.SortDesc
                 } else {
                     AppIcons.SortAsc

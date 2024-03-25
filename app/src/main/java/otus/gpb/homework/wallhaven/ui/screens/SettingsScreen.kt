@@ -100,7 +100,8 @@ internal fun SettingsRoute(
         data=viewModel.data(),
         modifier= Modifier
             .padding(all = 10.dp)
-            //.scrollable(state = rememberScrollState(), orientation = Orientation.Vertical)
+            .fillMaxSize()
+            .scrollable(state = rememberScrollState(), orientation = Orientation.Vertical)
             .verticalScroll(rememberScrollState())
     )
 }
@@ -123,7 +124,9 @@ internal fun SettingsScreen(
     settings: Settings,
     data: UiData,
 ) {
-    Column(modifier=modifier) {
+    Column(
+        modifier= modifier
+    ) {
         SettingsSectionTitle(stringResource(R.string.settings_api_key_section))
         OutlinedTextField(
             value = settings.apiKey.observeAsState().value!!,
@@ -163,7 +166,7 @@ internal fun SettingsScreen(
                 LocalStoragePieChartColors.current.colorFree,
             )
         )
-        PieChart<StoreDataTypes>(
+       PieChart<StoreDataTypes>(
             modifier= Modifier
                 .fillMaxWidth(0.5f)
                 .align(Alignment.CenterHorizontally),

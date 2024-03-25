@@ -16,6 +16,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import otus.gpb.homework.wallhaven.wh.WHOrder
+import otus.gpb.homework.wallhaven.wh.WHSorting
 import javax.inject.Inject
 
 
@@ -28,16 +30,12 @@ enum class SettingsStatus {
     NONE, READY, LOADING, STORING, PENDING
 }
 
-enum class Sorting {
-    DATE_ADDED, RELEVANCE, RANDOM, VIEWS, FAVORITES, TOPLIST
-}
-
 @Serializable
 data class SettingsData (
     var theme:Themes = Themes.SYSTEM,
     var apiKey:String = "",
-    var sorting:Sorting=Sorting.DATE_ADDED,
-    var sortingDesc:Boolean=true,
+    var sorting: WHSorting =WHSorting.DATE_ADDED,
+    var order: WHOrder=WHOrder.DESC
 )
 
 class Settings {
@@ -51,11 +49,11 @@ class Settings {
      var theme = storeObserver<Themes>(preferences.theme,"theme") {v->
         preferences.theme=v
     }
-    var sorting = storeObserver<Sorting>(preferences.sorting,"sorting") {v->
+    var sorting = storeObserver<WHSorting>(preferences.sorting,"sorting") {v->
         preferences.sorting=v
     }
-    var sortingDesc = storeObserver<Boolean>(preferences.sortingDesc,"sortingDesc") {v->
-        preferences.sortingDesc=v
+    var order = storeObserver<WHOrder>(preferences.order,"sortingDesc") {v->
+        preferences.order=v
     }
     var apiKey = storeObserver<String>(preferences.apiKey,"apiKey") {v->
         preferences.apiKey=v
@@ -66,7 +64,7 @@ class Settings {
         theme.value=preferences.theme
         apiKey.value=preferences.apiKey
         sorting.value=preferences.sorting
-        sortingDesc.value=preferences.sortingDesc
+        order.value=preferences.order
         Log.d(tag, "applying done")
     }
 

@@ -114,6 +114,12 @@ class Colors {
         val Teal40 = Color(0xFF3A656F)
         val Teal80 = Color(0xFFA2CED9)
         val Teal90 = Color(0xFFBEEAF6)
+        val Yellow10 = Color(0xFFacb20c)
+        val Yellow20 = Color(0xFFe6e905)
+        val Yellow30 = Color(0xFFFFFF38)
+        val Yellow40 = Color(0xFFFFFF6D)
+        val Yellow80 = Color(0xFFFFFFA6)
+        val Yellow90 = Color(0xFFFFFFD7)
         val White = Color.White
         val Black = Color.Black
     }
@@ -340,16 +346,16 @@ open class PieChartColors(
     val colorCache:Color=Color.Unspecified,
     val colorFavorites:Color=Color.Unspecified,
 )
-object StoragePieChartDarkColors:PieChartColors(
-    Colors.Blue40,
+object StoragePieChartLightColors:PieChartColors(
+    Colors.Orange80,
     Colors.Purple80,
     Colors.DarkPurpleGray90,
 )
 
-object StoragePieChartLightColors:PieChartColors(
-    Colors.Blue40,
+object StoragePieChartDarkColors:PieChartColors(
+    Colors.Orange90,
     Colors.Purple80,
-    Colors.Orange40,
+    Colors.Yellow40,
 )
 
 val LocalStoragePieChartColors = compositionLocalOf { PieChartColors() }
@@ -428,7 +434,7 @@ fun AppTheme(
     )
     val backgroundTheme = defaultBackgroundTheme
 
-    val storagePieChartTheme = if (darkTheme) StoragePieChartLightColors else StoragePieChartDarkColors
+    val storagePieChartTheme = if (darkTheme) StoragePieChartDarkColors else StoragePieChartLightColors
 
     val tintTheme = TintTheme()
 

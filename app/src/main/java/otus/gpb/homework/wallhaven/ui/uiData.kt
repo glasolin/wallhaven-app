@@ -24,7 +24,7 @@ import java.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 enum class StoreDataTypes {
-    NONE,FAVORITES, CACHE, FREE
+    NONE, FAVORITES, CACHE, FREE
 }
 
 class UiData {
