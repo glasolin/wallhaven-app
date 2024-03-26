@@ -22,8 +22,59 @@ data class WHSearchRequest(
     var categories:WHCategories?=null,
     var purity: WHPurity?=null,
     var order: WHOrder?=null,
-    var colors:List<WHColor>?=null
-)
+    var sorting: WHSorting?=null,
+    var colors:List<WHColor>?=null,
+    var seed:String?=null,
+    var page:Int?=null,
+) {
+    fun QueryMap() : Map<String,String> {
+        val requestData =mutableMapOf<String,String>()
+
+        val q= mutableListOf<String>()
+
+        if (search!=null) {q.add(search!!)}
+
+        val tags=tags?.joinToString(separator = " ","+tag=") { it }
+        if (tags != null) {q.add(tags)}
+
+        if (q.isNotEmpty()) {requestData["q"]=q.joinToString { " " }}
+
+        when (purity) {
+            WHPurity.SFW -> requestData["purity"]="100"
+            WHPurity.SKETCHY -> requestData["purity"]="010"
+            WHPurity.NSFW -> requestData["purity"]="001"
+            null -> requestData["purity"]="111"
+        }
+        when (categories) {
+            WHCategories.GENERAL -> requestData["category"]="100"
+            WHCategories.ANIME -> requestData["category"]="010"
+            WHCategories.PEOPLE -> requestData["category"]="001"
+            null -> requestData["category"]="111"
+        }
+
+        when (sorting) {
+            WHSorting.DATE_ADDED -> requestData["sorting"]="date_added"
+            WHSorting.RELEVANCE ->  requestData["sorting"]="relevance"
+            WHSorting.RANDOM -> requestData["sorting"]="random"
+            WHSorting.VIEWS -> requestData["sorting"]="views"
+            WHSorting.FAVORITES -> requestData["sorting"]="favorites"
+            WHSorting.TOPLIST -> requestData["sorting"]="toplist"
+            null -> {}
+        }
+
+        when (order) {
+            WHOrder.DESC -> requestData["order"]="desc"
+            WHOrder.ASC -> requestData["order"]="asc"
+            null -> {}
+        }
+
+        if (seed?.isNotEmpty() == true) {requestData["seed"]=seed!!}
+
+        if (page!=null && page!! >0 && page!! <9999) {requestData["page"]=page.toString()}
+
+        return  requestData
+    }
+}
 
 
 
@@ -69,7 +120,7 @@ data class WHSearchResponse(
 object RequestInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
         val request = chain.request()
-        Log.d("RequestInterceptor","Outgoing request to ${request.url()}")
+        Log.d("RequestInterceptor","Outgoing request to ${request.url}")
         return chain.proceed(request)
     }
 }
@@ -97,16 +148,7 @@ class WHSearch {
     suspend fun search (request:WHSearchRequest):WHSearchResponse? {
         val retrofit = getInstance()
         val searchApi = retrofit.create(WHSearchApi::class.java)
-        var requestData =mutableMapOf<String,String>()
-        /*if (request.search != null) {requestData["q"]= request.search!!
-        } else {requestData["q"]=""}*/
-
-        requestData["q"]=if (request.search!=null) {request.search!!} else {""}
-
-        val tags=request.tags?.joinToString(separator = " ","+tag=") { it }
-        if (tags != null)  requestData["q"] = String().concat
-
-        val rc=searchApi.search(requestData)
+        val rc=searchApi.search(request.QueryMap())
         try {
             if (rc!!.isSuccessful) {return rc.body() as WHSearchResponse} else {return null}
         } catch (e:Exception) {

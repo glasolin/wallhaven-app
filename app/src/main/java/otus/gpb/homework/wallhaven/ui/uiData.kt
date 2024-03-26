@@ -3,6 +3,7 @@ package otus.gpb.homework.wallhaven.ui
 import android.content.Context
 import android.os.Environment
 import android.os.StatFs
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -38,6 +39,7 @@ enum class StoreDataTypes {
 }
 
 class UiData {
+    private val tag = "UiData"
     private var context: Context?=null
         get() {requireNotNull(field){println("Context was not initialized")};return field}
 
@@ -53,8 +55,9 @@ class UiData {
     init {
         updateStorageUsage()
         searchString.observeForever {
-            //currentRequestData.tags=it.split(" ")
+            currentRequestData.search=it
         }
+
     }
     fun setContext(context: Context) {
         this.context=context
@@ -112,14 +115,18 @@ class UiData {
         coroutineScope!!.launch {
             val s= WHSearch()
             val list= s.search(currentRequestData) ?: return@launch
-            if (list.meta.total ==0) {
+            if (_imagesData.value.size == 0) {
                 for (i in 0..<list.meta.total) {
                     _imagesData.value.add(emptyImage())
                 }
             }
             for (i in 0 ..<min(list.meta.per_page,list.data.size)) {
                 val shift=i+(list.meta.per_page*(list.meta.current_page-1))
+                while (shift>=_imagesData.value.size) {
+                    _imagesData.value.add(emptyImage())
+                }
                 with (list.data[i]) {
+                    Log.d(tag,"loading image info $i to position $shift")
                     _imagesData.value[shift] = Image(
                         id = id,
                         path = path,

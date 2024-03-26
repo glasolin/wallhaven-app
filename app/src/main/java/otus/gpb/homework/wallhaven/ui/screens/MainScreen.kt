@@ -1,13 +1,19 @@
 package otus.gpb.homework.wallhaven.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.magnifier
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -21,13 +27,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.util.Predicate.not
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -47,6 +56,7 @@ import otus.gpb.homework.wallhaven.ui.theme.AppIcons
 import otus.gpb.homework.wallhaven.ui.theme.AppTheme
 import otus.gpb.homework.wallhaven.wh.WHOrder
 import otus.gpb.homework.wallhaven.wh.WHSorting
+import coil.compose.AsyncImage
 
 
 fun NavController.navigateToMain(navOptions: NavOptions) = navigate(MAIN_ROUTE, navOptions)
@@ -70,7 +80,7 @@ internal fun MainRoute(
         modifier= Modifier
             .padding(all = 10.dp)
             //.scrollable(state = rememberScrollState(), orientation = Orientation.Vertical)
-            .verticalScroll(rememberScrollState())
+            //.verticalScroll(rememberScrollState())
     )
 }
 
@@ -206,5 +216,27 @@ internal fun MainGrid(
     settings: Settings,
     modifier: Modifier = Modifier,
 ) {
-
+    Text(
+        data.imagesData.collvalue.size.toString()
+    )
+    if (data.imagesData.collectAsState().value.size>0) {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Adaptive(200.dp),
+            verticalItemSpacing = 4.dp,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            content = {
+                items(count = data.imagesData.value.size) { photo ->
+                    AsyncImage(
+                        model = photo,
+                        contentScale = ContentScale.Crop,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
 }

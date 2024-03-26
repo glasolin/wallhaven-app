@@ -76,6 +76,7 @@ class Settings {
                 } else {
                     Log.d(tag, "changed to ${it}")
                 }
+
                 onChange(it)
                 if (isLoaded()) {
                     smartStore(data, it)
