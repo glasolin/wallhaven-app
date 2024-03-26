@@ -104,7 +104,10 @@ class MainActivity : ComponentActivity() {
                     //androidTheme = shouldUseAndroidTheme(uiState),
                     //disableDynamicTheming = shouldDisableDynamicTheming(uiState),
                 ) {
-                    App(viewModel.state())
+                    App(
+                        state= viewModel.state(),
+                        data= viewModel.data(),
+                    )
                 }
             }
         }

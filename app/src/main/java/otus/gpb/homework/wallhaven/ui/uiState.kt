@@ -4,10 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.activity.viewModels
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.util.trace
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -15,6 +17,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import otus.gpb.homework.wallhaven.MainActivityViewModel
 import otus.gpb.homework.wallhaven.ui.navigation.FAVORITES_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.FILTERS_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.MAIN_ROUTE
@@ -39,6 +42,7 @@ class UiState constructor() {
 
     val currentRoute: NavDestination?
         @Composable get() = navController!!.currentBackStackEntryAsState().value?.destination
+
 
     val currentScreen: Navigation?
         @Composable get() = when (currentRoute?.route) {
@@ -80,8 +84,10 @@ class UiState constructor() {
         }
     }
 
+    @Composable
     fun reloadMainGrid() {
-        TODO("Not yet implemented")
+        val viewModel:MainActivityViewModel= hiltViewModel()
+        viewModel.data().loadImages()
     }
 
     fun navigateBack() {

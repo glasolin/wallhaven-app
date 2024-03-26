@@ -11,11 +11,33 @@ enum class WHSorting {
 }
 
 enum class WHCategories {
-    GENERAL,ANIME,PEOPLE
+    GENERAL,ANIME,PEOPLE;
+    companion object {
+        fun fromString(s: String): WHCategories {
+            return try {
+                valueOf(s)
+            } catch (e: IllegalArgumentException) {
+                GENERAL
+            }
+        }
+    }
+}
+
+enum class WHStatus {
+    NONE, INFO, CACHED, LOADED
 }
 
 enum class WHPurity {
-    SFW, SKETCHY, NSFW
+    SFW, SKETCHY, NSFW;
+    companion object {
+        fun fromString(s: String): WHPurity {
+            return try {
+                WHPurity.valueOf(s)
+            } catch (e: IllegalArgumentException) {
+                WHPurity.NSFW
+            }
+        }
+    }
 }
 
 enum class WHOrder {
@@ -31,7 +53,38 @@ enum class WHOrder {
     }
 }
 
-data class WHColor(val name: String, val value: Color)
+data class Image(
+    val id: String,
+    val path: String,
+    val category: WHCategories,
+    val colors: List<WHColor>,
+    val purity: WHPurity,
+    val ratio: String,
+    val resolution: String,
+    val source: String,
+    val width: Int,
+    val height: Int,
+    val size: Int,
+    val views: Int,
+    val status:WHStatus
+)
+
+data class WHColor(val name: String, val value: Color) {
+    companion object {
+        fun fromString(s: String):WHColor {
+            val c:Color=try {
+                if ( s.trim().first().equals("#") ) {
+                    Color.parseColor(s).toColor()
+                } else {
+                    Color.parseColor("#$s").toColor()
+                }
+            } catch (e:Exception) {
+                Color.parseColor("#000000").toColor()
+            }
+            return WHColor(c.toString(),c)
+        }
+    }
+}
 
 object WHColors {
     val colors:List<WHColor> = listOf("660000","990000","cc0000","cc3333","ea4c88","993399","663399",
@@ -40,7 +93,24 @@ object WHColors {
         "cc6633","996633","663300","000000","999999","cccccc","ffffff",
         "424153")
         .map{
-            WHColor("#$it",Color.parseColor("#$it").toColor())
+            WHColor.fromString(it)
         }
+}
 
+fun emptyImage():Image {
+    return Image(
+        category= WHCategories.GENERAL,
+        colors= emptyList(),
+        id  = "",
+        path = "",
+        purity = WHPurity.NSFW,
+        ratio = "",
+        resolution = "",
+        source = "",
+        views = 0,
+        height = 0,
+        width = 0,
+        size = 0,
+        status = WHStatus.NONE
+    )
 }

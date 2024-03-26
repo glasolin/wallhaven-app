@@ -49,6 +49,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import otus.gpb.homework.wallhaven.ui.UiData
 import otus.gpb.homework.wallhaven.ui.UiState
 import otus.gpb.homework.wallhaven.ui.navigation.AppNavHost
 import otus.gpb.homework.wallhaven.ui.navigation.Navigation
@@ -58,7 +59,10 @@ import otus.gpb.homework.wallhaven.ui.theme.Background
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun App(state: UiState) {
+fun App(
+    state: UiState,
+    data: UiData,
+) {
     Background {
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -107,7 +111,7 @@ fun App(state: UiState) {
                     // Show the top app bar on top level destinations.
                     val screen = state.currentScreen
                     if (screen != null) {
-                        AppTitleBar(currentScreen = screen, state = state)
+                        AppTitleBar(currentScreen = screen, state = state, data = data)
                     }
 
                     AppNavHost(
@@ -129,6 +133,7 @@ fun App(state: UiState) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppTitleBar(
+    data: UiData,
     state: UiState,
     currentScreen: Navigation?,
     modifier: Modifier = Modifier,
@@ -143,7 +148,7 @@ private fun AppTitleBar(
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.RELOAD)) {
         navigationIcon = AppIcons.Reload
         navigationIconContentDescription = stringResource(R.string.title_bar_reload)
-        onNavigationClick={ state.reloadMainGrid() }
+        onNavigationClick={ data.reloadImages() }
     }
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.BACK)) {
         navigationIcon = AppIcons.ArrowBack

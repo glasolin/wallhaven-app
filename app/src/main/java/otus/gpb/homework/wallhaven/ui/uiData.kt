@@ -19,8 +19,18 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import otus.gpb.homework.wallhaven.R
+import otus.gpb.homework.wallhaven.wh.emptyImage
+import otus.gpb.homework.wallhaven.wh.Image
+import otus.gpb.homework.wallhaven.wh.WHCategories
+import otus.gpb.homework.wallhaven.wh.WHColor
+import otus.gpb.homework.wallhaven.wh.WHPurity
+import otus.gpb.homework.wallhaven.wh.WHSearch
+import otus.gpb.homework.wallhaven.wh.WHSearchApi
+import otus.gpb.homework.wallhaven.wh.WHSearchRequest
+import otus.gpb.homework.wallhaven.wh.WHStatus
 import java.io.File
 import java.time.Duration
+import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
 
 enum class StoreDataTypes {
@@ -34,10 +44,17 @@ class UiData {
     private var coroutineScope:CoroutineScope?=null
         get() {requireNotNull(field){println("Coroutine scope was not initialized")};return field}
 
-    var storeUsage = mutableStateOf<Map<StoreDataTypes,Long>>((emptyMap ()))
+    var storeUsage = mutableStateOf<Map<StoreDataTypes,Long>>(emptyMap())
     var searchString = MutableLiveData<String>("")
+    private val _imagesData= MutableStateFlow<MutableList<Image>>(mutableListOf())
+    val imagesData=_imagesData.asStateFlow()
+    private var currentRequestData=WHSearchRequest()
+
     init {
         updateStorageUsage()
+        searchString.observeForever {
+            //currentRequestData.tags=it.split(" ")
+        }
     }
     fun setContext(context: Context) {
         this.context=context
@@ -89,5 +106,42 @@ class UiData {
         } finally {
             return "0"
         }
+    }
+
+    fun loadImages() {
+        coroutineScope!!.launch {
+            val s= WHSearch()
+            val list= s.search(currentRequestData) ?: return@launch
+            if (list.meta.total ==0) {
+                for (i in 0..<list.meta.total) {
+                    _imagesData.value.add(emptyImage())
+                }
+            }
+            for (i in 0 ..<min(list.meta.per_page,list.data.size)) {
+                val shift=i+(list.meta.per_page*(list.meta.current_page-1))
+                with (list.data[i]) {
+                    _imagesData.value[shift] = Image(
+                        id = id,
+                        path = path,
+                        category = WHCategories.fromString(category),
+                        colors = colors.map { WHColor.fromString(it) },
+                        width = dimension_x,
+                        height = dimension_y,
+                        purity = WHPurity.fromString(purity),
+                        ratio = ratio,
+                        resolution = resolution,
+                        size = file_size,
+                        source = source,
+                        views = views,
+                        status = WHStatus.INFO,
+                    )
+                }
+            }
+        }
+    }
+
+    fun reloadImages() {
+        _imagesData.value.clear()
+        loadImages()
     }
 }
