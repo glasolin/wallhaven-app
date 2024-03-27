@@ -5,7 +5,11 @@ import androidx.core.graphics.toColor
 import androidx.core.graphics.toColorInt
 
 const val WH_BASE_URL = "https://wallhaven.cc/api/v1/"
+const val WH_THUMB_MAX_DIMENTION=150
 
+enum class WHLoadingStatus {
+    NONE,LOADING,LOADED
+}
 enum class WHSorting {
     DATE_ADDED, RELEVANCE, RANDOM, VIEWS, FAVORITES, TOPLIST
 }
@@ -24,7 +28,7 @@ enum class WHCategories {
 }
 
 enum class WHStatus {
-    NONE, INFO, CACHED, LOADED
+    NONE, INFO, LOADING, LOADED
 }
 
 enum class WHPurity {
@@ -55,7 +59,8 @@ enum class WHOrder {
 
 data class Image(
     val id: String,
-    val path: String,
+    val thumbPath: String,
+    val imagePath: String,
     val category: WHCategories,
     val colors: List<WHColor>,
     val purity: WHPurity,
@@ -64,9 +69,12 @@ data class Image(
     val source: String,
     val width: Int,
     val height: Int,
+    val thumbWidth:Int,
+    val thumbHeight:Int,
     val size: Int,
     val views: Int,
-    val status:WHStatus
+    val thumbStatus:WHStatus,
+    val imageStatus:WHStatus
 )
 
 data class WHColor(val name: String, val value: Color) {
@@ -102,7 +110,8 @@ fun emptyImage():Image {
         category= WHCategories.GENERAL,
         colors= emptyList(),
         id  = "",
-        path = "",
+        imagePath = "",
+        thumbPath = "",
         purity = WHPurity.NSFW,
         ratio = "",
         resolution = "",
@@ -111,6 +120,23 @@ fun emptyImage():Image {
         height = 0,
         width = 0,
         size = 0,
-        status = WHStatus.NONE
+        thumbHeight = 0,
+        thumbWidth = 0,
+        imageStatus = WHStatus.NONE,
+        thumbStatus = WHStatus.NONE,
     )
+}
+
+fun WHGetThumbDimentions(imageWidth:Int ,imageHeight:Int):Pair<Int,Int> {
+    if ((imageWidth==0) || (imageHeight==0)) {return Pair(0,0)}
+    var thumbWidth=0
+    var thumbHeight=0
+    if (imageWidth>imageHeight) {
+        thumbWidth= WH_THUMB_MAX_DIMENTION
+        thumbHeight=(thumbWidth*imageHeight).floorDiv(imageWidth)
+    } else {
+        thumbHeight= WH_THUMB_MAX_DIMENTION
+        thumbWidth=(thumbHeight*imageWidth).floorDiv(imageHeight)
+    }
+    return Pair(thumbWidth,thumbHeight)
 }

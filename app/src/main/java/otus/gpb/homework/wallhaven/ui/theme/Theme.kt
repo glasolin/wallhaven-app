@@ -120,6 +120,16 @@ class Colors {
         val Yellow40 = Color(0xFFFFFF6D)
         val Yellow80 = Color(0xFFFFFFA6)
         val Yellow90 = Color(0xFFFFFFD7)
+        val Grey90 = Color(0xFFeeeeee)
+        val Grey80 = Color(0xFFdddddd)
+        val Grey70 = Color(0xFFcccccc)
+        val Grey60 = Color(0xFFb2b2b2)
+        val Grey50 = Color(0xFF999999)
+        val Grey40 = Color(0xFF808080)
+        val Grey30 = Color(0xFF666666)
+        val Grey20 = Color(0xFF333333)
+        val Grey10 = Color(0xFF1c1c1c)
+        val Grey00 = Color(0xFF111111)
         val White = Color.White
         val Black = Color.Black
     }
@@ -341,6 +351,21 @@ data class BackgroundTheme(
     val tonalElevation: Dp = Dp.Unspecified,
 )
 
+open class GalleryColors(
+    val thumbNotLoaded:Color=Color.Unspecified,
+    val thumbUnknown:Color=Color.Unspecified,
+)
+
+object GalleryLightColors:GalleryColors (
+    thumbNotLoaded = Colors.Grey90,
+    thumbUnknown = Colors.Grey70
+)
+
+object GalleryDarkColors:GalleryColors (
+    thumbNotLoaded = Colors.Grey30,
+    thumbUnknown = Colors.Grey50
+)
+
 open class PieChartColors(
     val colorFree:Color=Color.Unspecified,
     val colorCache:Color=Color.Unspecified,
@@ -359,6 +384,8 @@ object StoragePieChartDarkColors:PieChartColors(
 )
 
 val LocalStoragePieChartColors = compositionLocalOf { PieChartColors() }
+
+val LocalGalleryColors = compositionLocalOf { GalleryColors() }
 
 /**
  * A composition local for [BackgroundTheme].
@@ -436,6 +463,8 @@ fun AppTheme(
 
     val storagePieChartTheme = if (darkTheme) StoragePieChartDarkColors else StoragePieChartLightColors
 
+    val galleryTheme = if (darkTheme) GalleryDarkColors else GalleryLightColors
+
     val tintTheme = TintTheme()
 
     // Composition locals
@@ -444,6 +473,7 @@ fun AppTheme(
         LocalBackgroundTheme provides backgroundTheme,
         LocalTintTheme provides tintTheme,
         LocalStoragePieChartColors provides storagePieChartTheme,
+        LocalGalleryColors provides galleryTheme,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

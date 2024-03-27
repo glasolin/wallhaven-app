@@ -27,7 +27,7 @@ data class WHSearchRequest(
     var seed:String?=null,
     var page:Int?=null,
 ) {
-    fun QueryMap() : Map<String,String> {
+    fun queryMap() : Map<String,String> {
         val requestData =mutableMapOf<String,String>()
 
         val q= mutableListOf<String>()
@@ -123,6 +123,7 @@ object RequestInterceptor : Interceptor {
         Log.d("RequestInterceptor","Outgoing request to ${request.url}")
         return chain.proceed(request)
     }
+
 }
 
 interface WHSearchApi {
@@ -148,9 +149,9 @@ class WHSearch {
     suspend fun search (request:WHSearchRequest):WHSearchResponse? {
         val retrofit = getInstance()
         val searchApi = retrofit.create(WHSearchApi::class.java)
-        val rc=searchApi.search(request.QueryMap())
         try {
-            if (rc!!.isSuccessful) {return rc.body() as WHSearchResponse} else {return null}
+            val rc=searchApi.search(request.queryMap())
+            if (rc!!.isSuccessful) {Log.d("WHSearch",rc.body().toString());return rc.body() as WHSearchResponse} else {return null}
         } catch (e:Exception) {
             return null
         }
