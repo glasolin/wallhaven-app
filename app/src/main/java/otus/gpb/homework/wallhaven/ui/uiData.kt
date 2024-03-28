@@ -18,9 +18,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -51,6 +53,7 @@ import kotlin.time.Duration.Companion.milliseconds
 enum class StoreDataTypes {
     NONE, FAVORITES, CACHE, FREE
 }
+data class pageData(val page:Int,val data:List<Image>)
 
 class UiData {
     private val tag = "UiData"
@@ -72,12 +75,14 @@ class UiData {
     var itemsOnPage = 0
     private var currentRequestData=WHSearchRequest()
     val imageFile=WHImage()
-
+    var _pagesData = MutableStateFlow(emptyList<List<pageData>>())
+    val pagesData=_pagesData.asStateFlow()
     init {
         updateStorageUsage()
         searchString.observeForever {
             currentRequestData.search=it
         }
+        _pagesData.collect()
 
     }
     fun setContext(context: Context) {
@@ -223,10 +228,11 @@ class UiData {
         _imagesData.value!![idx]!!.let {
             coroutineScope!!.launch {
                 if (imageFile.toCache(it.id,WHFileType.THUMBNAIL,it.thumbPath).isNotEmpty()) {
-                    var out=_imagesData.value=out
-                    _imagesData.value!![idx]=it.copy(thumbStatus = WHStatus.LOADED)
+                    //var out=_imagesData.value=out
+                    //_imagesData.value!![idx]=it.copy(thumbStatus = WHStatus.LOADED)
                 }
             }
         }
     }
 }
+
