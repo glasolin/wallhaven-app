@@ -82,7 +82,6 @@ class UiData {
         searchString.observeForever {
             currentRequestData.search=it
         }
-        _pagesData.collect()
 
     }
     fun setContext(context: Context) {
