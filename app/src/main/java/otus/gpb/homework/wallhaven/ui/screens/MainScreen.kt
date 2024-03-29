@@ -66,7 +66,9 @@ import otus.gpb.homework.wallhaven.wh.WHSorting
 import coil.compose.AsyncImage
 import otus.gpb.homework.wallhaven.ui.theme.Colors
 import otus.gpb.homework.wallhaven.ui.theme.LocalGalleryColors
+import otus.gpb.homework.wallhaven.wh.WHFileType
 import otus.gpb.homework.wallhaven.wh.WHGetThumbDimentions
+import otus.gpb.homework.wallhaven.wh.WHStatus
 import otus.gpb.homework.wallhaven.wh.WH_THUMB_MAX_DIMENTION
 import java.lang.Math.random
 import kotlin.random.Random
@@ -230,48 +232,47 @@ internal fun MainGrid(
     settings: Settings,
     modifier: Modifier = Modifier,
 ) {
-    if (data.imagesData.collectAsState().value==null) {
-        Text("Not fetched")
-    } else if (data.imagesData.collectAsState().value!!.isEmpty()) {
+    val total=data.imagesTotal.asIntState().intValue
+    if (total==0) {
         Text("No data")
     } else {
-        val cnt=data.searchCount.asIntState().value
-        Text(cnt.toString())
+        Text(total.toString())
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Adaptive(WH_THUMB_MAX_DIMENTION.dp),
             verticalItemSpacing = 4.dp,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             content = {
-                items(count = cnt) { id ->
-                    if (data.imagesData.collectAsState().value!!.containsKey(id)) {
-                        with (data.imagesData.collectAsState().value!![id]!!) {
-                            AsyncImage(
-                                model = this.thumbPath,
+                items(count = total) { idx ->
+                    data.imagesData.collectAsState().value[idx]?.let {
+                        when (it.thumbStatus.value) {
+                            WHStatus.LOADED -> AsyncImage(
+                                model = data.imageFromCache(it.id,WHFileType.THUMBNAIL),
                                 contentScale = ContentScale.Crop,
                                 contentDescription = null,
                                 modifier = Modifier
-                                    .width(this.thumbWidth.dp)
-                                    .height(this.thumbHeight.dp)
-                            )
-                            /*Box(
-                                modifier = Modifier
-                                    .width(this.thumbWidth.dp)
-                                    .height(this.thumbHeight.dp)
-                                    .clip(RectangleShape)
-                                    .background(LocalGalleryColors.current.thumbNotLoaded)
-                            )*/
+                                    .width(it.thumbWidth.dp)
+                                    .height(it.thumbHeight.dp)
+                                )
+                            else ->
+                                Box(
+                                    modifier = Modifier
+                                        .width(it.thumbWidth.dp)
+                                        .height(it.thumbHeight.dp)
+                                        .clip(RectangleShape)
+                                        .background(LocalGalleryColors.current.thumbNotLoaded)
+                                )
                         }
-                    } else {
-                        data.loadImageInfo(id)
+                    } ?: run {
+                        data.loadImageInfo(idx)
                         val seed = remember {
                             System.currentTimeMillis()
                         }
-                        val resolutions=listOf(
-                            Pair(1920,1080),
-                            Pair(1080,1920),
+                        val resolutions = listOf(
+                            Pair(1920, 1080),
+                            Pair(1080, 1920),
                         )
-                        val(iw,ih)=resolutions.random(Random(seed))
-                        val(thumbWidth,thumbHeight)= WHGetThumbDimentions(iw,ih)
+                        val (iw, ih) = resolutions.random(Random(seed))
+                        val (thumbWidth, thumbHeight) = WHGetThumbDimentions(iw, ih)
                         Box(
                             modifier = Modifier
                                 .width(thumbWidth.dp)

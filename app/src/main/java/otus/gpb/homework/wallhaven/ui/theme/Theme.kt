@@ -357,12 +357,12 @@ open class GalleryColors(
 )
 
 object GalleryLightColors:GalleryColors (
-    thumbNotLoaded = Colors.Grey90,
+    thumbNotLoaded = Colors.Purple30,
     thumbUnknown = Colors.Grey70
 )
 
 object GalleryDarkColors:GalleryColors (
-    thumbNotLoaded = Colors.Grey30,
+    thumbNotLoaded = Colors.Purple30,
     thumbUnknown = Colors.Grey50
 )
 

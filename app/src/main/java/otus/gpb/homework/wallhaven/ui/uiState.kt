@@ -87,7 +87,7 @@ class UiState constructor() {
     @Composable
     fun reloadMainGrid() {
         val viewModel:MainActivityViewModel= hiltViewModel()
-        viewModel.data().loadImages()
+        viewModel.data().reloadImages()
     }
 
     fun navigateBack() {

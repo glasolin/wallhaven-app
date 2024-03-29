@@ -6,6 +6,7 @@ import android.os.StatFs
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -67,16 +68,18 @@ class UiData {
         get() {requireNotNull(field){println("Pages pool was not initialized")};return field}
 
     var storeUsage = mutableStateOf<Map<StoreDataTypes,Long>>(emptyMap())
+    private var currentRequestData=WHSearchRequest()
+
     private var loadedPages = mutableMapOf<Int,WHLoadingStatus>()
     var searchString = MutableLiveData<String>("")
-    private val _imagesData= MutableStateFlow<Map<Int,Image>?>(null)
+    private var itemsOnPage = 0
+
+    private val _imagesData= MutableStateFlow<Map<Int,Image>>(emptyMap())
     val imagesData=_imagesData.asStateFlow()
-    val searchCount = mutableIntStateOf(0)
-    var itemsOnPage = 0
-    private var currentRequestData=WHSearchRequest()
-    val imageFile=WHImage()
-    var _pagesData = MutableStateFlow(emptyList<List<pageData>>())
-    val pagesData=_pagesData.asStateFlow()
+    val imagesTotal= mutableIntStateOf(0)
+
+    private val imageFile=WHImage()
+
     init {
         updateStorageUsage()
         searchString.observeForever {
@@ -138,7 +141,7 @@ class UiData {
         }
     }
 
-    fun loadImages(page:Int=0) {
+    fun loadPage(page:Int=0) {
         if (loadedPages.containsKey(page) && loadedPages[page]!=WHLoadingStatus.NONE) {
             return
         }
@@ -154,18 +157,16 @@ class UiData {
                 return@launch
             }
             Log.d(tag,"page $page fetched")
-            searchCount.intValue=list.meta.total
+            imagesTotal.intValue=list.meta.total
             itemsOnPage=list.meta.per_page
-            var out=mutableMapOf<Int,Image>()
-            if (_imagesData.value != null) {
-                out = _imagesData.value!!.toMutableMap()
-            }
+            val out=mutableMapOf<Int,Image>()
+
             for (i in 0 ..<min(list.meta.per_page,list.data.size)) {
-                val shift=i+(list.meta.per_page*(list.meta.current_page-1))
+                val idx=i+(list.meta.per_page*(list.meta.current_page-1))
                 with (list.data[i]) {
                     //Log.d(tag,"loading image info $i to position $shift")
                     val(thumbWidth,thumbHeight)= WHGetThumbDimentions(dimension_x,dimension_y)
-                    out[shift] = Image(
+                    out[idx] = Image(
                         id = id,
                         imagePath = path,
                         thumbPath = thumbs.original,
@@ -179,36 +180,35 @@ class UiData {
                         size = file_size,
                         source = source,
                         views = views,
-                        thumbStatus = WHStatus.INFO,
-                        imageStatus = WHStatus.INFO,
+                        thumbStatus = mutableStateOf(WHStatus.INFO),
+                        imageStatus = mutableStateOf(WHStatus.INFO),
                         thumbHeight = thumbHeight,
                         thumbWidth = thumbWidth,
                     )
-                    loadThumbnail(shift)
                 }
             }
             _imagesData.value=out
+            loadThumbnails()
             loadedPages[page]=WHLoadingStatus.LOADED
         }
     }
 
     fun reloadImages() {
-        searchCount.intValue=0
-        _imagesData.value=null
+        _imagesData.value= emptyMap()
         loadedPages.clear()
-        loadImages()
+        loadPage()
     }
 
     private fun imageInfoLoaded(id:Int):Boolean {
-        if (_imagesData.value==null) {
-            return false
-        } else {
-            return _imagesData.value!!.containsKey(id)
-        }
+        return _imagesData.value.containsKey(id)
     }
 
-    private fun thumbInCache(id: String):Boolean {
-        return imageFile.inCache(id,WHFileType.THUMBNAIL)
+    fun imageFromCache(id:String,type: WHFileType):String {
+        return imageFile.fromCache(id,type).absolutePath
+    }
+
+    private fun imageInCache(id: String,type: WHFileType):Boolean {
+        return imageFile.inCache(id,type)
     }
 
     fun loadImageInfo(id: Int) {
@@ -216,19 +216,49 @@ class UiData {
             return
         } else if (itemsOnPage > 0) {
             val page = id.floorDiv(itemsOnPage)
-            loadImages(page)
+            loadPage(page)
         }
     }
 
-    private fun loadThumbnail(idx:Int) {
-        if ((_imagesData.value == null) || (!_imagesData.value!!.containsKey(idx))) {
-            return
+    private fun loadThumbnails() {
+        //loadImage(idx,WHFileType.THUMBNAIL)
+    }
+
+    private fun loadImage(idx:Int,type: WHFileType) {
+        fun updateStatus(status:WHStatus) {
+            when (type) {
+                WHFileType.IMAGE -> _imagesData.value[idx]!!.imageStatus.value=status
+                WHFileType.THUMBNAIL -> _imagesData.value[idx]!!.thumbStatus.value=status
+            }
         }
-        _imagesData.value!![idx]!!.let {
-            coroutineScope!!.launch {
-                if (imageFile.toCache(it.id,WHFileType.THUMBNAIL,it.thumbPath).isNotEmpty()) {
-                    //var out=_imagesData.value=out
-                    //_imagesData.value!![idx]=it.copy(thumbStatus = WHStatus.LOADED)
+        fun getStatus():WHStatus {
+            return when (type) {
+                WHFileType.IMAGE -> _imagesData.value[idx]!!.imageStatus.value
+                WHFileType.THUMBNAIL -> _imagesData.value[idx]!!.thumbStatus.value
+            }
+        }
+        _imagesData.value[idx]?.let {
+            if (getStatus() == WHStatus.INFO) {
+                updateStatus(WHStatus.LOADING)
+                coroutineScope!!.launch {
+                    var v = WHStatus.INFO
+                    if (imageInCache(it.id, type)) {
+                        v = WHStatus.LOADED
+                    } else {
+                        updateStatus(WHStatus.LOADING)
+                        when (type) {
+                            WHFileType.IMAGE ->
+                                if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
+                                    v = WHStatus.LOADED
+                                }
+
+                            WHFileType.THUMBNAIL ->
+                                if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
+                                    v = WHStatus.LOADED
+                                }
+                        }
+                        updateStatus(v)
+                    }
                 }
             }
         }

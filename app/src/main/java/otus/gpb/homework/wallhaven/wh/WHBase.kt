@@ -1,6 +1,8 @@
 package otus.gpb.homework.wallhaven.wh
 
 import android.graphics.Color
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.graphics.toColor
 import androidx.core.graphics.toColorInt
 
@@ -73,8 +75,8 @@ data class Image(
     val thumbHeight:Int,
     val size: Int,
     val views: Int,
-    val thumbStatus:WHStatus,
-    val imageStatus:WHStatus
+    var thumbStatus:MutableState<WHStatus>,
+    var imageStatus:MutableState<WHStatus>,
 )
 
 data class WHColor(val name: String, val value: Color) {
@@ -122,8 +124,8 @@ fun emptyImage():Image {
         size = 0,
         thumbHeight = 0,
         thumbWidth = 0,
-        imageStatus = WHStatus.NONE,
-        thumbStatus = WHStatus.NONE,
+        imageStatus = mutableStateOf(WHStatus.NONE),
+        thumbStatus = mutableStateOf(WHStatus.NONE),
     )
 }
 
