@@ -95,12 +95,14 @@ class WHImage {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val fileApi = retrofit.create(WHFetchImage::class.java)
+        Log.d(tag,"retrofit builder completed for ${url}")
         var out=""
         try {
             val rc = fileApi.download(url)
             if (rc.isSuccessful) {
+                Log.d(tag,"file downloaded ${url}")
                 out=saveFile(rc.body(),id,type)
-                Log.d(tag,rc.body().toString());
+                Log.d(tag,"file saved to ${out}");
             }
         } catch (_:Exception) {}
         return out

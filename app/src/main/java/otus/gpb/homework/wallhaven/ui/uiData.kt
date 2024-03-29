@@ -293,30 +293,29 @@ class UiData {
                 WHFileType.THUMBNAIL -> imagesData[idx]!!.thumbStatus.value
             }
         }
-        coroutineScope!!.launch {
-            imagesData[idx]?.let {
-                if (getStatus() == WHStatus.INFO) {
-                    updateStatus(WHStatus.LOADING)
-                    coroutineScope!!.launch {
-                        var v = WHStatus.INFO
-                        if (imageInCache(it.id, type)) {
-                            v = WHStatus.LOADED
-                        } else {
-                            updateStatus(WHStatus.LOADING)
-                            when (type) {
-                                WHFileType.IMAGE ->
-                                    if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
-                                        v = WHStatus.LOADED
-                                    }
 
-                                WHFileType.THUMBNAIL ->
-                                    if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
-                                        v = WHStatus.LOADED
-                                    }
-                            }
-                            updateStatus(v)
+        imagesData[idx]?.let {
+            if (getStatus() == WHStatus.INFO) {
+                updateStatus(WHStatus.LOADING)
+                coroutineScope!!.launch {
+                    var v = WHStatus.INFO
+                    if (imageInCache(it.id, type)) {
+                        v = WHStatus.LOADED
+                    } else {
+                        updateStatus(WHStatus.LOADING)
+                        when (type) {
+                            WHFileType.IMAGE ->
+                                //if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
+                                    v = WHStatus.LOADED
+                                //}
+
+                            WHFileType.THUMBNAIL ->
+                                if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
+                                    v = WHStatus.LOADED
+                                }
                         }
                     }
+                    updateStatus(v)
                 }
             }
         }
