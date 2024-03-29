@@ -91,6 +91,7 @@ class WHImage {
             .build()
         val retrofit=Retrofit.Builder()
             .client(okHttpClient)
+            .baseUrl(WH_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val fileApi = retrofit.create(WHFetchImage::class.java)

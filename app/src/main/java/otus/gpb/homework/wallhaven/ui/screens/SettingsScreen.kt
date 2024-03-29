@@ -96,7 +96,6 @@ internal fun SettingsRoute(
     viewModel: MainActivityViewModel = hiltViewModel(),
 ) {
     SettingsScreen(
-        settings=viewModel.settings(),
         data=viewModel.data(),
         modifier= Modifier
             .padding(all = 10.dp)
@@ -112,7 +111,6 @@ private fun PreviewSettingsScreen() {
     AppTheme {
         SettingsScreen(
             modifier = Modifier,
-            settings= Settings(),
             data= UiData().apply { setContext(LocalContext.current) },
         )
     }
@@ -121,7 +119,6 @@ private fun PreviewSettingsScreen() {
 @Composable
 internal fun SettingsScreen(
     modifier: Modifier = Modifier,
-    settings: Settings,
     data: UiData,
 ) {
     Column(
@@ -129,9 +126,9 @@ internal fun SettingsScreen(
     ) {
         SettingsSectionTitle(stringResource(R.string.settings_api_key_section))
         OutlinedTextField(
-            value = settings.apiKey.observeAsState().value!!,
+            value = data.settings().apiKey.observeAsState().value!!,
             singleLine = true,
-            onValueChange = {settings.apiKey.value=it },
+            onValueChange = {data.settings().apiKey.value=it },
             label = { Text(stringResource(R.string.settings_api_key_label)) }
         )
 
@@ -142,8 +139,8 @@ internal fun SettingsScreen(
                 Themes.LIGHT to stringResource(R.string.settings_theme_light),
                 Themes.DARK to stringResource(R.string.settings_theme_dark),
             ),
-            selected = settings.theme.observeAsState().value!!,
-            onSelect = {s->settings.theme.value=s},
+            selected = data.settings().theme.observeAsState().value!!,
+            onSelect = {s->data.settings().theme.value=s},
         )
 
         SettingsSectionTitle(stringResource(R.string.settings_storage_section))

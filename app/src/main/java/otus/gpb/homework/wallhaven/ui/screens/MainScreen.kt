@@ -91,7 +91,6 @@ internal fun MainRoute(
     MainScreen(
         data=viewModel.data(),
         state=viewModel.state(),
-        settings = viewModel.settings(),
         modifier= Modifier
             .padding(all = 10.dp)
             //.scrollable(state = rememberScrollState(), orientation = Orientation.Vertical)
@@ -101,7 +100,6 @@ internal fun MainRoute(
 
 @Composable
 internal fun MainScreen(
-    settings: Settings,
     data: UiData,
     state:UiState,
     modifier: Modifier = Modifier,
@@ -110,13 +108,11 @@ internal fun MainScreen(
         MainFilters(
             data=data,
             state=state,
-            settings=settings,
         )
         Spacer(Modifier.height(16.dp))
         MainSorting(
             data=data,
             state=state,
-            settings=settings,
             Modifier
                 .align(Alignment.End)
         )
@@ -124,7 +120,6 @@ internal fun MainScreen(
         MainGrid(
             data=data,
             state=state,
-            settings=settings,
         )
     }
 }
@@ -136,7 +131,6 @@ private fun PreviewMainScreen() {
         MainScreen(
             modifier = Modifier,
             state=UiState(),
-            settings = Settings(),
             data= UiData().apply { setContext(LocalContext.current) },
         )
     }
@@ -146,7 +140,6 @@ private fun PreviewMainScreen() {
 internal fun MainFilters(
     data: UiData,
     state:UiState,
-    settings: Settings,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier=modifier) {
@@ -180,7 +173,6 @@ internal fun MainFilters(
 internal fun MainSorting(
     data: UiData,
     state:UiState,
-    settings: Settings,
     modifier: Modifier = Modifier,
 ) {
     val items=mapOf(
@@ -198,8 +190,8 @@ internal fun MainSorting(
         ){
             DropdownMenuBox(
                 items = items,
-                selected = settings.sorting.observeAsState().value!!,
-                onSelect = { s -> settings.sorting.value = s },
+                selected = data.settings().sorting.observeAsState().value!!,
+                onSelect = { s -> data.settings().sorting.value = s },
                 modifier = Modifier
                     .align(Alignment.End)
             )
@@ -210,10 +202,10 @@ internal fun MainSorting(
         ) {
             FloatingActionButton(
 
-                onClick = { settings.order.value = WHOrder.switch(settings.order.value!!) },
+                onClick = { data.settings().order.value = WHOrder.switch(data.settings().order.value!!) },
                 elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
             ) {
-                val icon = if (settings.order.observeAsState().value!! == WHOrder.DESC) {
+                val icon = if (data.settings().order.observeAsState().value!! == WHOrder.DESC) {
                     AppIcons.SortDesc
                 } else {
                     AppIcons.SortAsc
@@ -229,7 +221,6 @@ internal fun MainSorting(
 internal fun MainGrid(
     data: UiData,
     state:UiState,
-    settings: Settings,
     modifier: Modifier = Modifier,
 ) {
     val total=data.imagesTotal.asIntState().intValue
@@ -243,7 +234,7 @@ internal fun MainGrid(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             content = {
                 items(count = total) { idx ->
-                    data.imagesData.collectAsState().value[idx]?.let {
+                    data.imagesData[idx]?.let {
                         when (it.thumbStatus.value) {
                             WHStatus.LOADED -> AsyncImage(
                                 model = data.imageFromCache(it.id,WHFileType.THUMBNAIL),

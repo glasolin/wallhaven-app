@@ -5,6 +5,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.graphics.toColor
 import androidx.core.graphics.toColorInt
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 const val WH_BASE_URL = "https://wallhaven.cc/api/v1/"
 const val WH_THUMB_MAX_DIMENTION=150
@@ -75,8 +79,8 @@ data class Image(
     val thumbHeight:Int,
     val size: Int,
     val views: Int,
-    var thumbStatus:MutableState<WHStatus>,
-    var imageStatus:MutableState<WHStatus>,
+    var thumbStatus:MutableStateFlow<WHStatus>,
+    var imageStatus:MutableStateFlow<WHStatus>,
 )
 
 data class WHColor(val name: String, val value: Color) {
@@ -124,8 +128,8 @@ fun emptyImage():Image {
         size = 0,
         thumbHeight = 0,
         thumbWidth = 0,
-        imageStatus = mutableStateOf(WHStatus.NONE),
-        thumbStatus = mutableStateOf(WHStatus.NONE),
+        imageStatus = MutableStateFlow<WHStatus>(WHStatus.NONE),
+        thumbStatus = MutableStateFlow<WHStatus>(WHStatus.NONE),
     )
 }
 

@@ -44,7 +44,6 @@ object UiStateModule {
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val settings:Settings,
     private val data: UiData,
     private val state: UiState,
 ) : ViewModel() {
@@ -54,14 +53,15 @@ class MainActivityViewModel @Inject constructor(
     init {
         context.observeForever { context ->
             // Do something with context
-            settings.setContext(context)
+            //settings.setContext(context)
             state.setContext(context)
             data.setContext(context)
         }
         coroutineScope.observeForever { scope ->
             data.setCoroutineScope(scope)
         }
-        settings.load()
+        //settings.load()
+        data.load()
     }
     fun setContext(context: Context) {
         this.context.value = context
@@ -70,16 +70,6 @@ class MainActivityViewModel @Inject constructor(
         coroutineScope.value=scope
     }
 
-    fun settingsLoaded():Boolean {
-        if (!settings.isLoaded()) {
-            settings.load()
-            return false
-        } else {
-            return true
-        }
-    }
-
-    fun settings():Settings=settings
     fun data():UiData=data
     fun state():UiState=state
 }

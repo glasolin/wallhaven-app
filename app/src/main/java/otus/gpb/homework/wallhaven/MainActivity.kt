@@ -47,11 +47,11 @@ class MainActivity : ComponentActivity() {
         Log.d(tag, "installing splash screen")
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition {
-            Log.d(tag, "Keep on screen condition: ${!viewModel.settingsLoaded()}")
-            !viewModel.settingsLoaded()
+            Log.d(tag, "Keep on screen condition: ${!viewModel.data().settingsLoaded()}")
+            !viewModel.data().settingsLoaded()
         }
-        viewModel.settings().theme.observe(this) {
-            Log.d(tag,"Change theme to ${viewModel.settings().theme.value}");
+        viewModel.data().settings().theme.observe(this) {
+            Log.d(tag,"Change theme to ${viewModel.data().settings().theme.value}");
             drawMain()
         }
         Log.d(tag,"Draw main");
@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
     private fun drawMain() {
         enableEdgeToEdge()
         setContent {
-            val darkTheme = shouldUseDarkTheme(viewModel.settings())
+            val darkTheme = shouldUseDarkTheme(viewModel.data().settings())
             viewModel.setCoroutineScope(rememberCoroutineScope())
 
             // Update the edge to edge configuration to match the theme
