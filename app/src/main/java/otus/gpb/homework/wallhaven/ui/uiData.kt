@@ -198,11 +198,11 @@ class UiData {
         }
     }
 
-    fun isPageLoaded(page:Int):Boolean {
+    private fun isPageLoaded(page:Int):Boolean {
         return (pagesData.containsKey(page) && pagesData[page]!=WHLoadingStatus.NONE)
     }
 
-    fun loadPage(page:Int=0) {
+    private fun loadPage(page:Int=0) {
         if (isPageLoaded(page)) {
             return
         }
@@ -280,7 +280,7 @@ class UiData {
         }
     }
 
-    private fun loadImage(idx:Int,type: WHFileType) {
+    private fun loadImage(idx:Int, type: WHFileType) {
         fun updateStatus(status:WHStatus) {
             when (type) {
                 WHFileType.IMAGE -> imagesData[idx]!!.imageStatus.value=status
@@ -293,27 +293,29 @@ class UiData {
                 WHFileType.THUMBNAIL -> imagesData[idx]!!.thumbStatus.value
             }
         }
-        imagesData[idx]?.let {
-            if (getStatus() == WHStatus.INFO) {
-                updateStatus(WHStatus.LOADING)
-                coroutineScope!!.launch {
-                    var v = WHStatus.INFO
-                    if (imageInCache(it.id, type)) {
-                        v = WHStatus.LOADED
-                    } else {
-                        updateStatus(WHStatus.LOADING)
-                        when (type) {
-                            WHFileType.IMAGE ->
-                                if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
-                                    v = WHStatus.LOADED
-                                }
+        coroutineScope!!.launch {
+            imagesData[idx]?.let {
+                if (getStatus() == WHStatus.INFO) {
+                    updateStatus(WHStatus.LOADING)
+                    coroutineScope!!.launch {
+                        var v = WHStatus.INFO
+                        if (imageInCache(it.id, type)) {
+                            v = WHStatus.LOADED
+                        } else {
+                            updateStatus(WHStatus.LOADING)
+                            when (type) {
+                                WHFileType.IMAGE ->
+                                    if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
+                                        v = WHStatus.LOADED
+                                    }
 
-                            WHFileType.THUMBNAIL ->
-                                if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
-                                    v = WHStatus.LOADED
-                                }
+                                WHFileType.THUMBNAIL ->
+                                    if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
+                                        v = WHStatus.LOADED
+                                    }
+                            }
+                            updateStatus(v)
                         }
-                        updateStatus(v)
                     }
                 }
             }
