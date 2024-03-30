@@ -5,15 +5,19 @@ import android.os.Environment
 import android.os.StatFs
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.toMutableStateList
 import androidx.core.content.ContextCompat.getString
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.yield
@@ -31,17 +35,28 @@ import otus.gpb.homework.wallhaven.wh.WHRatio
 import otus.gpb.homework.wallhaven.wh.WHSearch
 import otus.gpb.homework.wallhaven.wh.WHSearchRequest
 import otus.gpb.homework.wallhaven.wh.WHStatus
+import otus.gpb.homework.wallhaven.wh.WHTagsSuggestion
 import java.io.File
+import java.time.Instant
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
+import kotlin.random.Random
 
 enum class StoreDataTypes {
     NONE, FAVORITES, CACHE, FREE
 }
+
+const val IMAGE_LOAD_TRIES = 3
+const val IMAGE_LOAD_MIN_DELAY_MS = 500
+const val IMAGE_LOAD_MAX_DELAY_MS = 1500
+const val IMAGE_RELOAD_DELAY_SEC = 3
+
+
 class UiData {
     private val tag = "UiData"
     private val tpTag = "UIDataThreadPool"
@@ -68,6 +83,9 @@ class UiData {
     var imagesData= mutableStateMapOf<Int,ImageInfo>()
     var pagesData = mutableStateMapOf<Int,WHLoadingStatus>()
 
+    private var suggester = MutableSharedFlow<List<String>>()
+    var tagSuggestion= mutableStateOf<List<String>>(emptyList())
+
     private var jobs= mutableListOf<Job>()
     val imagesTotal= mutableIntStateOf(-1)
     private var ready=false
@@ -76,8 +94,9 @@ class UiData {
     init {
         val corePoolSize = 4
         val maximumPoolSize = corePoolSize * 4
-        val keepAliveTime = 100L
-        val workQueue = SynchronousQueue<Runnable>()
+        val keepAliveTime = 1000L
+        //val workQueue = SynchronousQueue<Runnable>()
+        val workQueue = LinkedBlockingQueue<Runnable>()
         threadPool = ThreadPoolExecutor(
             corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.SECONDS, workQueue
         )
@@ -128,6 +147,11 @@ class UiData {
             currentRequestData.color=WHColor.fromString(it)
             refresh()
         }
+
+        settings.whTags.observeForever() {
+            currentRequestData.tags=it
+            refresh()
+        }
     }
 
     fun setContext(context: Context) {
@@ -169,15 +193,42 @@ class UiData {
                     imagesData[idx]=img
                     loadImage(img.copy(), idx, WHFileType.THUMBNAIL)
                 }
+                if (IMAGE_RELOAD_DELAY_SEC > 0) {
+                    imagesData.filter { (_, img) ->
+                        ((img.thumbStatus == WHStatus.ERROR)
+                                || (img.imageStatus == WHStatus.ERROR))
+                                && (Instant.now().epochSecond - img.updated.epochSecond > IMAGE_RELOAD_DELAY_SEC)
+                    }.forEach() { (i, img) ->
+                        Log.d(tag, "calling image reload for $i")
+                        loadImage(img.copy(), i, WHFileType.THUMBNAIL)
+                    }
+                }
             }
         })
         jobs.add(coroutineScope!!.launch {
             pageInfo.collect() {it->
                 yield()
                 it?.let {(idx,status)->
-                    Log.d(tag,"page $idx updated to status $status")
+                    //Log.d(tag,"page $idx updated to status $status")
                     pagesData[idx]=status
                 }
+            }
+        })
+        jobs.add(coroutineScope!!.launch {
+            suggester.collect() {
+                //Log.d(tag,"Added ${it} to suggestion list")
+                tagSuggestion.value=it
+            }
+        })
+    }
+
+    fun tagsSuggest(term: String) {
+        jobs.add(coroutineScope!!.launch() {
+            WHTagsSuggestion().suggest(term)?.let {tags ->
+                //Log.d(tag,"Suggestion list cleared")
+                suggester.emit(tags.results.map{
+                    it.value
+                })
             }
         })
     }
@@ -242,14 +293,21 @@ class UiData {
         }
     }
     fun loadPage(page:Int=0) {
-        Log.d(tpTag,"loadPage in $page")
+        if (isPageLoaded(page)) {
+            return
+        }
+        if (pagesData[page]==WHLoadingStatus.LOADING) {
+            return
+        }
         threadPool.execute {
             loadPageT(page)
         }
-        Log.d(tpTag,"loadPage out $page")
     }
     private fun loadPageT(page:Int=0) {
         if (isPageLoaded(page)) {
+            return
+        }
+        if (pagesData[page]==WHLoadingStatus.LOADING) {
             return
         }
         pagesData[page]=WHLoadingStatus.LOADING
@@ -293,6 +351,7 @@ class UiData {
                         imageStatus = WHStatus.INFO,
                         thumbHeight = thumbHeight,
                         thumbWidth = thumbWidth,
+                        updated = Instant.now()
                     )
                     ))
                 }
@@ -330,11 +389,9 @@ class UiData {
     }
 
     private fun loadImage(img:ImageInfo,idx:Int, type: WHFileType) {
-        Log.d(tpTag,"loadImage in $idx")
         threadPool.execute{
             loadImageT(img,idx,type)
         }
-        Log.d(tpTag,"loadImage out $idx")
     }
     private fun loadImageT(img:ImageInfo,idx:Int, type: WHFileType) {
         fun updateStatus(status:WHStatus) {
@@ -349,6 +406,12 @@ class UiData {
                 WHFileType.THUMBNAIL -> img.thumbStatus
             }
         }
+        fun getPath():String {
+            return when (type) {
+                WHFileType.IMAGE -> img.imagePath
+                WHFileType.THUMBNAIL -> img.thumbPath
+            }
+        }
         Log.d(tag,"Image $idx checking for loading")
 
            // Log.d(tag,"Image $idx in imagesData collection")
@@ -361,33 +424,39 @@ class UiData {
                         //  Log.d(tag,"Image $idx in cache")
                         v = WHStatus.LOADED
                     } else {
-                        when (type) {
-                            WHFileType.IMAGE -> {
-                                val f = WHImage().apply { setCachePath(cachePath!!) }
-                                if (f.toCache(img.id, type, img.imagePath).isNotEmpty()) {
-                                    v = WHStatus.LOADED
-                                } else {
-                                    v = WHStatus.ERROR
-                                }
-                            }
-                            WHFileType.THUMBNAIL -> {
-                                //  Log.d(tag, "Image $idx to cache called")
-                                val f=WHImage().apply { setCachePath(cachePath!!) }
-                                if (f.toCache(img.id, type, img.imagePath).isNotEmpty()) {
-                                    v = WHStatus.LOADED
-                                } else {
-                                    v = WHStatus.ERROR
-                                }
-                            }
+                        //  Log.d(tag, "Image $idx to cache called")
+                        val f=WHImage().apply { setCachePath(cachePath!!) }
+                        var tries= IMAGE_LOAD_TRIES
+                        while (f.toCache(img.id, type, getPath()).isEmpty()) {
+                            Log.d(tag,"Image $idx try ${tries}")
+                            tries--
+                            if (tries == 0) {break}
+                            delay(Random.nextInt(IMAGE_LOAD_MIN_DELAY_MS, IMAGE_LOAD_MAX_DELAY_MS).toLong())
+                        }
+                        v = if (f.inCache(img.id,type)) {
+                            WHStatus.LOADED
+                        } else {
+                            WHStatus.ERROR
                         }
                     }
                     Log.d(tag, "Image $idx set status to $v")
                     updateStatus(v)
+                    img.updated=Instant.now()
                     imageInfo.emit(Pair(idx,img))
                 }
             }
             WHStatus.ERROR,WHStatus.LOADING,WHStatus.LOADED -> {}
         }
+    }
+
+    fun clearFilters() {
+        settings.whCatehory.value=WHCategories.GENERAL
+        settings.whRatio.value=WHRatio.ANY
+        settings.whResolutionWidth.value=0
+        settings.whResolutionHeight.value=0
+        settings.whColor.value=""
+        settings.whPurity.value=WHPurity.SFW
+        settings.whTags.value= emptyList()
     }
 }
 

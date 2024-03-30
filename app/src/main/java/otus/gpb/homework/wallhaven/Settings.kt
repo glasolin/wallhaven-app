@@ -45,7 +45,8 @@ data class SettingsData (
     var whRatio: WHRatio = WHRatio.ANY,
     var whResolutionWidth:Int = 0,
     var whResolutionHeight:Int = 0,
-    var whColor:String=""
+    var whColor:String="",
+    var whTags: List<String> = emptyList()
 )
 
 class Settings {
@@ -88,6 +89,9 @@ class Settings {
     var whColor= storeObserver<String>(preferences.whColor,"whColor") {v->
         preferences.whColor=v
     }
+    var whTags= storeObserver<List<String>>(preferences.whTags,"whTags") {v->
+        preferences.whTags=v
+    }
 
     private fun applySettings() {
         Log.d(tag, "applying preferences...")
@@ -101,6 +105,7 @@ class Settings {
         whResolutionWidth.value=preferences.whResolutionWidth
         whResolutionHeight.value=preferences.whResolutionHeight
         whColor.value=preferences.whColor
+        whTags.value=preferences.whTags
         Log.d(tag, "applying done")
     }
 

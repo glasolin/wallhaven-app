@@ -36,7 +36,11 @@ data class WHSearchRequest(
             if (it.isNotEmpty()) q.add(it.trim())
         }
         tags?.let {
-            val t=it.joinToString(separator = " ", "+tag=").trim()
+            val t=if (it.isNotEmpty()) {
+                it.joinToString(separator = " +", prefix = "+").trim()
+            } else {
+                ""
+            }
             if (t.isNotEmpty()) {q.add(t)}
         }
         if (q.isNotEmpty()) {requestData["q"]=q.joinToString().trim()}
@@ -69,14 +73,14 @@ data class WHSearchRequest(
         when (ratio) {
             WHRatio.R16x9 -> requestData["ratios"]="16x9"
             WHRatio.R16x10 -> requestData["ratios"]="16x10"
-            WHRatio.R18x9 -> requestData["ratios"]="2"
+            WHRatio.R18x9 -> requestData["ratios"]="18x9"
             WHRatio.R21x9 -> requestData["ratios"]="21x9"
             WHRatio.R32x9 -> requestData["ratios"]="32x9"
             WHRatio.R48x9 -> requestData["ratios"]="48x9"
             WHRatio.R4x3 -> requestData["ratios"]="4x3"
             WHRatio.R5x4 -> requestData["ratios"]="5x4"
             WHRatio.R3x2 -> requestData["ratios"]="3x2"
-            WHRatio.R1x1 -> requestData["ratios"]="1"
+            WHRatio.R1x1 -> requestData["ratios"]="1x1"
             WHRatio.R9x16 -> requestData["ratios"]="9x16"
             WHRatio.R10x16 -> requestData["ratios"]="10x16"
             WHRatio.R9x18 -> requestData["ratios"]="9x18"
@@ -103,7 +107,9 @@ data class WHSearchRequest(
             requestData["resolutions"]="${width}x${height}"
         }
         color?.let {
-            requestData["colors"]=it.name
+            if (it.name.isNotEmpty()) {
+                requestData["colors"] = it.name
+            }
         }
 
         if (apiKey?.isNotEmpty() == true) {requestData["apikey"]=apiKey!!}
@@ -158,7 +164,6 @@ object RequestInterceptor : Interceptor {
         Log.d("RequestInterceptor","Outgoing request to ${request.url}")
         return chain.proceed(request)
     }
-
 }
 
 interface WHSearchApi {

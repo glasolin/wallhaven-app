@@ -1,5 +1,6 @@
 package otus.gpb.homework.wallhaven.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -17,11 +18,22 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -41,11 +53,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import kotlinx.coroutines.flow.asStateFlow
 import otus.gpb.homework.wallhaven.MainActivityViewModel
 import otus.gpb.homework.wallhaven.R
 import otus.gpb.homework.wallhaven.ui.UiData
 import otus.gpb.homework.wallhaven.ui.UiState
 import otus.gpb.homework.wallhaven.ui.assets.DropdownMenuBox
+import otus.gpb.homework.wallhaven.ui.assets.SuggestionTextBox
 import otus.gpb.homework.wallhaven.ui.navigation.FAVORITES_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.FILTERS_ROUTE
 import otus.gpb.homework.wallhaven.ui.theme.AppIcons
@@ -114,6 +128,15 @@ internal fun FiltersScreen(
         FiltersScreenSectionTitle(text = stringResource(R.string.filters_tags_section))
         FiltersScreenTagsGrid(
             data=data
+        )
+        ExtendedFloatingActionButton(
+            onClick = {data.clearFilters()},
+            icon = { Icon(AppIcons.ClearCache,"") },
+            text={ Text(stringResource(R.string.filters_button_clear)) },
+            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+            modifier= Modifier
+                .align(Alignment.End)
+                .padding(top = 24.dp, bottom = 8.dp),
         )
     }
 }
@@ -209,6 +232,8 @@ internal fun FiltersScreenCategoriesRow(
 internal fun FiltersScreenResolutionRow(
     data:UiData
 ) {
+    val width = data.settings().whResolutionWidth.observeAsState().value!!
+    val height = data.settings().whResolutionHeight.observeAsState().value!!
     Row() {
         Column(
             modifier = Modifier
@@ -226,19 +251,16 @@ internal fun FiltersScreenResolutionRow(
                 .weight(0.30f)
                 .padding(4.dp)
         ){
-            val resolutionWidth = remember{ mutableStateOf(
-                if (data.settings().whResolutionWidth.value!! > 0) {
-                    data.settings().whResolutionWidth.value.toString()
-                } else {""})
-            }
+            val resolutionWidth = if (width > 0) {
+                    width.toString()
+                } else {""}
             OutlinedTextField(
-                value = resolutionWidth.value,
+                value = resolutionWidth,
                 singleLine = true,
                 onValueChange = {
-                    resolutionWidth.value=it
                     try {
                         data.settings().whResolutionWidth.value = it.toInt()
-                        if (data.settings().whResolutionWidth.value!! <0 || data.settings().whResolutionWidth.value!! >9999) {
+                        if (width <0 || width >9999) {
                             data.settings().whResolutionWidth.value=0
                         }
                     } catch (_:Exception) {data.settings().whResolutionWidth.value=0}
@@ -263,19 +285,16 @@ internal fun FiltersScreenResolutionRow(
                 .weight(0.30f)
                 .padding(4.dp)
         ){
-            val resolutionHeight = remember{ mutableStateOf(
-                if (data.settings().whResolutionHeight.value!! > 0) {
-                    data.settings().whResolutionHeight.value.toString()
-                } else {""})
-            }
+            val resolutionHeight = if (height > 0) {
+                height.toString()
+            } else {""}
             OutlinedTextField(
-                value = resolutionHeight.value,
+                value = resolutionHeight,
                 singleLine = true,
                 onValueChange = {
-                    resolutionHeight.value=it
                     try {
                         data.settings().whResolutionHeight.value = it.toInt()
-                        if (data.settings().whResolutionHeight.value!! <0 || data.settings().whResolutionHeight.value!! >9999) {
+                        if (height <0 || height >9999) {
                             data.settings().whResolutionHeight.value=0
                         }
                     } catch (_:Exception) {data.settings().whResolutionHeight.value=0}
@@ -293,16 +312,15 @@ internal fun FiltersScreenColorsTable(
 ) {
     val bWidth=30.dp
     val bHeight=40.dp
-    val selectedColor = remember { mutableStateOf(
-        data.settings().whColor.value!!
-    )}
+    val selectedColor =  data.settings().whColor.observeAsState().value!!
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(5)
     ) {
-        val clrs=WHColors.colors.toMutableList()
-        data.settings().whColor.value?.let {
-            if (!WHColors.colors.contains(WHColor.fromString(it))) {
-                clrs.add(WHColor.fromString(it))
+        val clrs = WHColors.colors.toMutableList()
+        if (selectedColor.isNotEmpty()) {
+            if (!WHColors.colors.contains(WHColor.fromString(selectedColor))) {
+                clrs.add(WHColor.fromString(selectedColor))
             }
         }
         items(clrs.size) {idx ->
@@ -315,13 +333,16 @@ internal fun FiltersScreenColorsTable(
                     .height(bHeight)
                     .clip(RectangleShape)
                     .padding(4.dp)
-                    .background(color=c)
+                    .background(color = c)
                     .clickable {
-                        selectedColor.value=clrs[idx].name
-                        data.settings().whColor.value=clrs[idx].name
+                        if (selectedColor == clrs[idx].name) {
+                            data.settings().whColor.value = ""
+                        } else {
+                            data.settings().whColor.value = clrs[idx].name
+                        }
                     }
             ) {
-                if (clrs[idx].name == selectedColor.value) {
+                if (clrs[idx].name == selectedColor) {
                     val whiteColors=listOf("ffffff","ffff00")
                     val iColor = if (whiteColors.contains(clrs[idx].name)) {
                         Colors.Black
@@ -333,7 +354,7 @@ internal fun FiltersScreenColorsTable(
                         tint = iColor,
                         contentDescription = null,
                         modifier = Modifier
-                            .padding(top=3.dp,start=22.dp)
+                            .padding(top = 3.dp, start = 22.dp)
                             .size(25.dp),
                     )
                 }
@@ -342,9 +363,50 @@ internal fun FiltersScreenColorsTable(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FiltersScreenTagsGrid(
     data:UiData
 ) {
-
+    Log.d("FiltersScreenTagsGrid","Recomposition of FiltersScreenTagsGrid trigged")
+    val options=data.tagSuggestion
+    val text = remember { mutableStateOf("") }.value
+    val list = data.settings().whTags.observeAsState().value!!
+    SuggestionTextBox(
+        value=text,
+        items = options,
+        onChange = {
+            data.tagsSuggest(it)
+        },
+        onInput = {
+            if (it.isNotEmpty() && !list.contains(it)) {
+                val newList=list.toMutableList()
+                newList.add(it)
+                data.settings().whTags.value=newList
+            }
+        }
+    )
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(100.dp)
+    ) {
+        items(list.size) { idx ->
+            AssistChip(
+                onClick = {
+                    val newList=list.toMutableList()
+                    newList.removeAt(idx)
+                    data.settings().whTags.value=newList
+              },
+                label = { Text("#${list[idx]}") },
+                leadingIcon = {
+                    Icon(
+                        AppIcons.RemoveTag,
+                        contentDescription = "Localized description",
+                        Modifier.size(AssistChipDefaults.IconSize)
+                    )
+                },
+                modifier = Modifier
+                    .padding(4.dp)
+            )
+        }
+    }
 }

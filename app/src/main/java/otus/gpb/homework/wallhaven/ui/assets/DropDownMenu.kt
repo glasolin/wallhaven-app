@@ -39,10 +39,9 @@ fun <T> DropdownMenuBox(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier.menuAnchor()
             )
-
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
             ) {
                 items.forEach { (id, item) ->
                     DropdownMenuItem(

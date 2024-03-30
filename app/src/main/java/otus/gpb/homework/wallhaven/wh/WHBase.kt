@@ -2,6 +2,7 @@ package otus.gpb.homework.wallhaven.wh
 
 import android.graphics.Color
 import androidx.core.graphics.toColor
+import java.time.Instant
 
 const val WH_BASE_URL = "https://wallhaven.cc/api/v1/"
 const val WH_THUMB_MAX_DIMENTION=110
@@ -107,21 +108,27 @@ data class ImageInfo(
     val views: Int,
     var thumbStatus:WHStatus,
     var imageStatus:WHStatus,
+    var updated: Instant
 )
 
 data class WHColor(val name: String, val value: Color) {
     companion object {
         fun fromString(s: String):WHColor {
-            val c:Color=try {
+            val c:Color?=try {
                 if ( s.trim().first().equals("#") ) {
                     Color.parseColor(s).toColor()
                 } else {
                     Color.parseColor("#$s").toColor()
                 }
             } catch (e:Exception) {
-                Color.parseColor("#000000").toColor()
+                null
+                //Color.parseColor("#000000").toColor()
             }
-            return WHColor(colorToString(c),c)
+            return if (c != null) {
+                WHColor(colorToString(c),c)
+            } else {
+                WHColor("", Color.parseColor("#000000").toColor())
+            }
         }
 
         private fun colorToString(c:Color):String {
@@ -179,6 +186,7 @@ fun emptyImage():ImageInfo {
         thumbWidth = 0,
         imageStatus = WHStatus.NONE,
         thumbStatus = WHStatus.NONE,
+        updated = Instant.now()
     )
 }
 

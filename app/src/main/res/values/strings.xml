@@ -74,4 +74,5 @@
     <string name="filters_resolution_height">Height</string>
     <string name="filters_colors_section">Colors</string>
     <string name="filters_tags_section">Tags</string>
+    <string name="filters_button_clear">Clear filters</string>
 </resources>
