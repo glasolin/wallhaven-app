@@ -16,7 +16,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import otus.gpb.homework.wallhaven.wh.WHCategories
+import otus.gpb.homework.wallhaven.wh.WHColors
 import otus.gpb.homework.wallhaven.wh.WHOrder
+import otus.gpb.homework.wallhaven.wh.WHPurity
+import otus.gpb.homework.wallhaven.wh.WHRatio
 import otus.gpb.homework.wallhaven.wh.WHSorting
 import javax.inject.Inject
 
@@ -35,7 +39,13 @@ data class SettingsData (
     var theme:Themes = Themes.SYSTEM,
     var apiKey:String = "",
     var sorting: WHSorting =WHSorting.DATE_ADDED,
-    var order: WHOrder=WHOrder.DESC
+    var order: WHOrder=WHOrder.DESC,
+    var whCategory: WHCategories = WHCategories.GENERAL,
+    var whPurity: WHPurity = WHPurity.SFW,
+    var whRatio: WHRatio = WHRatio.ANY,
+    var whResolutionWidth:Int = 0,
+    var whResolutionHeight:Int = 0,
+    var whColor:String=""
 )
 
 class Settings {
@@ -46,7 +56,7 @@ class Settings {
     private var preferences = SettingsData()
     private var context:Context?=null
 
-     var theme = storeObserver<Themes>(preferences.theme,"theme") {v->
+    var theme = storeObserver<Themes>(preferences.theme,"theme") {v->
         preferences.theme=v
     }
     var sorting = storeObserver<WHSorting>(preferences.sorting,"sorting") {v->
@@ -59,12 +69,38 @@ class Settings {
         preferences.apiKey=v
     }
 
+    var whCatehory = storeObserver<WHCategories>(preferences.whCategory,"whCategory") {v->
+        preferences.whCategory=v
+    }
+    var whPurity = storeObserver<WHPurity>(preferences.whPurity,"whPurity") {v->
+        preferences.whPurity=v
+    }
+    var whRatio = storeObserver<WHRatio>(preferences.whRatio,"whRatio") {v->
+        preferences.whRatio=v
+    }
+
+    var whResolutionWidth= storeObserver<Int>(preferences.whResolutionWidth,"whResolutionWidth") {v->
+        preferences.whResolutionWidth=v
+    }
+    var whResolutionHeight= storeObserver<Int>(preferences.whResolutionHeight,"whResolutionWidth") {v->
+        preferences.whResolutionHeight=v
+    }
+    var whColor= storeObserver<String>(preferences.whColor,"whColor") {v->
+        preferences.whColor=v
+    }
+
     private fun applySettings() {
         Log.d(tag, "applying preferences...")
         theme.value=preferences.theme
         apiKey.value=preferences.apiKey
         sorting.value=preferences.sorting
         order.value=preferences.order
+        whCatehory.value=preferences.whCategory
+        whPurity.value=preferences.whPurity
+        whRatio.value=preferences.whRatio
+        whResolutionWidth.value=preferences.whResolutionWidth
+        whResolutionHeight.value=preferences.whResolutionHeight
+        whColor.value=preferences.whColor
         Log.d(tag, "applying done")
     }
 

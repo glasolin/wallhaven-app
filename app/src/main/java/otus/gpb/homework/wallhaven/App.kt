@@ -148,7 +148,7 @@ private fun AppTitleBar(
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.RELOAD)) {
         navigationIcon = AppIcons.Reload
         navigationIconContentDescription = stringResource(R.string.title_bar_reload)
-        onNavigationClick={ data.reloadImages() }
+        onNavigationClick={  }
     }
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.BACK)) {
         navigationIcon = AppIcons.ArrowBack

@@ -8,10 +8,13 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Bookmarks
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CheckCircleOutline
 import androidx.compose.material.icons.outlined.Upcoming
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bookmark
@@ -154,6 +157,7 @@ object AppIcons {
     val SortDesc = Icons.Filled.ArrowUpward
     val ClearCache = Icons.Filled.Delete
     val Reload = Icons.Rounded.Refresh
+    val Checked = Icons.Filled.Check
     val Filter = Icons.Filled.FilterAlt
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
     val Upcoming = Icons.Rounded.Upcoming
@@ -222,38 +226,38 @@ val DarkDefaultColorScheme = darkColorScheme(
 internal val Typography = Typography(
     displayLarge = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
+        fontSize = 45.sp,//57.sp,
+        lineHeight = 52.sp,//64.sp,
         letterSpacing = (-0.25).sp,
     ),
     displayMedium = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
+        fontSize = 36.sp,//45.sp,
+        lineHeight = 44.sp,//52.sp,
         letterSpacing = 0.sp,
     ),
     displaySmall = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
+        fontSize = 24.sp,//36.sp,
+        lineHeight = 36.sp,//44.sp,
         letterSpacing = 0.sp,
     ),
     headlineLarge = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
+        fontSize = 28.sp,//32.sp,
+        lineHeight = 36.sp,//40.sp,
         letterSpacing = 0.sp,
     ),
     headlineMedium = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
+        fontSize = 24.sp,//28.sp,
+        lineHeight = 32.sp,//36.sp,
         letterSpacing = 0.sp,
     ),
     headlineSmall = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
+        fontSize = 18.sp,//24.sp,
+        lineHeight = 24.sp,//32.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Bottom,
@@ -262,8 +266,8 @@ internal val Typography = Typography(
     ),
     titleLarge = TextStyle(
         fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
+        fontSize = 18.sp,//22.sp,
+        lineHeight = 24.sp,//28.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Bottom,
@@ -272,21 +276,21 @@ internal val Typography = Typography(
     ),
     titleMedium = TextStyle(
         fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        fontSize = 14.sp,//18.sp,
+        lineHeight = 20.sp,//24.sp,
         letterSpacing = 0.1.sp,
     ),
     titleSmall = TextStyle(
         fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
+        fontSize = 12.sp,//14.sp,
+        lineHeight = 16.sp,//20.sp,
         letterSpacing = 0.1.sp,
     ),
     // Default text style
     bodyLarge = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
+        fontSize = 14.sp,//16.sp,
+        lineHeight = 20.sp,//24.sp,
         letterSpacing = 0.5.sp,
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -295,21 +299,21 @@ internal val Typography = Typography(
     ),
     bodyMedium = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
+        fontSize = 12.sp,//14.sp,
+        lineHeight = 16.sp,//20.sp,
         letterSpacing = 0.25.sp,
     ),
     bodySmall = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
+        fontSize = 10.sp,//12.sp,
+        lineHeight = 14.sp,//16.sp,
         letterSpacing = 0.4.sp,
     ),
     // Used for Button
     labelLarge = TextStyle(
         fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
+        fontSize = 12.sp,//14.sp,
+        lineHeight = 16.sp,//20.sp,
         letterSpacing = 0.1.sp,
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -319,8 +323,8 @@ internal val Typography = Typography(
     // Used for Navigation items
     labelMedium = TextStyle(
         fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
+        fontSize = 10.sp,//12.sp,
+        lineHeight = 14.sp,//16.sp,
         letterSpacing = 0.5.sp,
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -330,8 +334,8 @@ internal val Typography = Typography(
     // Used for Tag
     labelSmall = TextStyle(
         fontWeight = FontWeight.Medium,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
+        fontSize = 8.sp,//10.sp,
+        lineHeight = 12.sp,//14.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,

@@ -4,41 +4,22 @@ import android.content.Context
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.viewModels
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat.getString
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.yield
-import otus.gpb.homework.wallhaven.MainActivityViewModel
 import otus.gpb.homework.wallhaven.R
 import otus.gpb.homework.wallhaven.Settings
-import otus.gpb.homework.wallhaven.wh.emptyImage
-import otus.gpb.homework.wallhaven.wh.Image
+import otus.gpb.homework.wallhaven.wh.ImageInfo
 import otus.gpb.homework.wallhaven.wh.WHCategories
 import otus.gpb.homework.wallhaven.wh.WHColor
 import otus.gpb.homework.wallhaven.wh.WHFileType
@@ -46,31 +27,34 @@ import otus.gpb.homework.wallhaven.wh.WHGetThumbDimentions
 import otus.gpb.homework.wallhaven.wh.WHImage
 import otus.gpb.homework.wallhaven.wh.WHLoadingStatus
 import otus.gpb.homework.wallhaven.wh.WHPurity
+import otus.gpb.homework.wallhaven.wh.WHRatio
 import otus.gpb.homework.wallhaven.wh.WHSearch
-import otus.gpb.homework.wallhaven.wh.WHSearchApi
 import otus.gpb.homework.wallhaven.wh.WHSearchRequest
 import otus.gpb.homework.wallhaven.wh.WHStatus
-import retrofit2.http.Url
 import java.io.File
-import java.time.Duration
-import kotlin.math.max
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
-import kotlin.time.Duration.Companion.milliseconds
 
 enum class StoreDataTypes {
     NONE, FAVORITES, CACHE, FREE
 }
 class UiData {
     private val tag = "UiData"
+    private val tpTag = "UIDataThreadPool"
     private val settings = Settings()
+    private var threadPool: ExecutorService
     private var context: Context?=null
         get() {requireNotNull(field){println("Context was not initialized")};return field}
 
     private var coroutineScope:CoroutineScope?=null
         get() {requireNotNull(field){println("Coroutine scope was not initialized")};return field}
 
-    private var pagesPool: CloseableCoroutineDispatcher?=null
-        get() {requireNotNull(field){println("Pages pool was not initialized")};return field}
+    private var cachePath: File?=null
+        get() {requireNotNull(field){println("Cache path was not initialized")};return field}
 
     var storeUsage = mutableStateOf<Map<StoreDataTypes,Long>>(emptyMap())
     private var currentRequestData=WHSearchRequest()
@@ -78,29 +62,80 @@ class UiData {
     var searchString = MutableLiveData<String>("")
     private var itemsOnPage = 0
 
-    private var imageInfo = MutableSharedFlow<Pair<Int,Image>?>()
+    private var imageInfo = MutableSharedFlow<Pair<Int,ImageInfo>?>()
     private var pageInfo = MutableSharedFlow<Pair<Int,WHLoadingStatus>?>()
 
-    var imagesData= mutableStateMapOf<Int,Image>()
+    var imagesData= mutableStateMapOf<Int,ImageInfo>()
     var pagesData = mutableStateMapOf<Int,WHLoadingStatus>()
 
-    var jobs= mutableListOf<Job>()
-    val imagesTotal= mutableIntStateOf(0)
+    private var jobs= mutableListOf<Job>()
+    val imagesTotal= mutableIntStateOf(-1)
+    private var ready=false
 
-
-    private val imageFile=WHImage()
 
     init {
+        val corePoolSize = 4
+        val maximumPoolSize = corePoolSize * 4
+        val keepAliveTime = 100L
+        val workQueue = SynchronousQueue<Runnable>()
+        threadPool = ThreadPoolExecutor(
+            corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.SECONDS, workQueue
+        )
+
         updateStorageUsage()
         searchString.observeForever {
             currentRequestData.search=it
+            refresh()
+        }
+        settings.order.observeForever() {
+            currentRequestData.order=it
+            refresh()
+        }
+        settings.sorting.observeForever() {
+            currentRequestData.sorting=it
+            refresh()
+        }
+
+        settings.whCatehory.observeForever() {
+            currentRequestData.category = it
+            refresh()
+        }
+        settings.whPurity.observeForever() {
+            currentRequestData.purity = it
+            refresh()
+        }
+
+        settings.whRatio.observeForever() {
+            currentRequestData.ratio = it
+            refresh()
+        }
+
+        settings.apiKey.observeForever() {
+            currentRequestData.apiKey=it
+            refresh()
+        }
+
+        settings.whResolutionWidth.observeForever() {
+            currentRequestData.width=it
+            refresh()
+        }
+
+        settings.whResolutionHeight.observeForever() {
+            currentRequestData.height=it
+            refresh()
+        }
+        settings.whColor.observeForever() {
+            currentRequestData.color=WHColor.fromString(it)
+            refresh()
         }
     }
 
     fun setContext(context: Context) {
         this.context=context
         settings.setContext(context)
-        imageFile.setCachePath(context.cacheDir)
+        if (context.cacheDir!=null) {
+            cachePath=context.cacheDir
+        }
     }
 
     fun settings():Settings=settings
@@ -116,7 +151,7 @@ class UiData {
         settings.load()
     }
 
-    fun stopJobs() {
+    private fun stopJobs() {
         jobs.forEach() {
             it.cancel()
         }
@@ -132,7 +167,7 @@ class UiData {
                 it?.let {(idx,img) ->
                     Log.d(tag,"image $idx updated to ${img.id}")
                     imagesData[idx]=img
-                    loadImage(idx,WHFileType.THUMBNAIL)
+                    loadImage(img.copy(), idx, WHFileType.THUMBNAIL)
                 }
             }
         })
@@ -149,8 +184,8 @@ class UiData {
 
     fun setCoroutineScope(scope: CoroutineScope) {
         coroutineScope = scope
-        pagesPool = newSingleThreadContext("pagesPool")
         collect()
+        ready=true
     }
 
     private fun updateStorageUsage() {
@@ -199,10 +234,21 @@ class UiData {
     }
 
     private fun isPageLoaded(page:Int):Boolean {
-        return (pagesData.containsKey(page) && pagesData[page]!=WHLoadingStatus.NONE)
+        return (pagesData.containsKey(page) && pagesData[page]!=WHLoadingStatus.NONE) && (pagesData[page]!=WHLoadingStatus.FAILED)
     }
-
-    private fun loadPage(page:Int=0) {
+    fun loadImageInfo(id: Int) {
+        if (!imageInfoLoaded(id)) {
+            loadPage(imagePage(id))
+        }
+    }
+    fun loadPage(page:Int=0) {
+        Log.d(tpTag,"loadPage in $page")
+        threadPool.execute {
+            loadPageT(page)
+        }
+        Log.d(tpTag,"loadPage out $page")
+    }
+    private fun loadPageT(page:Int=0) {
         if (isPageLoaded(page)) {
             return
         }
@@ -211,7 +257,7 @@ class UiData {
             Log.d(tag,"loading page info $page")
             val s= WHSearch()
             val list = s.search(currentRequestData.copy().apply {
-                this.page=page
+                this.page=page+1
             })
             if (list == null ) {
                 pageInfo.emit(Pair(page,WHLoadingStatus.NONE))
@@ -220,31 +266,35 @@ class UiData {
             Log.d(tag,"page $page fetched")
             imagesTotal.intValue=list.meta.total
             itemsOnPage=list.meta.per_page
+            list.meta.seed?.let {
+                currentRequestData.seed=it
+            }
 
             for (i in 0 ..<min(list.meta.per_page,list.data.size)) {
                 val idx=i+(list.meta.per_page*(list.meta.current_page-1))
                 with (list.data[i]) {
                     //Log.d(tag,"emit image $idx as $id")
                     val(thumbWidth,thumbHeight)= WHGetThumbDimentions(dimension_x,dimension_y)
-                    imageInfo.emit(Pair(idx,Image(
+                    imageInfo.emit(Pair(idx, ImageInfo(
                         id = id,
                         imagePath = path,
-                        thumbPath = thumbs.original,
+                        thumbPath = thumbs.small,
                         category = WHCategories.fromString(category),
                         colors = colors.map { WHColor.fromString(it) },
                         width = dimension_x,
                         height = dimension_y,
                         purity = WHPurity.fromString(purity),
-                        ratio = ratio,
+                        ratio = WHRatio.fromString(ratio,dimension_x,dimension_y),
                         resolution = resolution,
                         size = file_size,
                         source = source,
                         views = views,
-                        thumbStatus = MutableStateFlow(WHStatus.INFO),
-                        imageStatus = MutableStateFlow(WHStatus.INFO),
+                        thumbStatus = WHStatus.INFO,
+                        imageStatus = WHStatus.INFO,
                         thumbHeight = thumbHeight,
                         thumbWidth = thumbWidth,
-                    )))
+                    )
+                    ))
                 }
             }
             //Log.d(tag,"emit page $page as ${WHLoadingStatus.LOADED.toString()}")
@@ -252,11 +302,13 @@ class UiData {
         }
     }
 
-    fun reloadImages() {
-        imagesTotal.intValue=0
+    fun refresh() {
+        imagesTotal.intValue=-1
         imagesData.clear()
         pagesData.clear()
-        loadPage()
+        if (ready) {
+            loadPage()
+        }
     }
 
     private fun imageInfoLoaded(id:Int):Boolean {
@@ -264,60 +316,77 @@ class UiData {
     }
 
     fun imageFromCache(id:String,type: WHFileType):String {
-        return imageFile.fromCache(id,type).absolutePath
+        val f=WHImage().apply { setCachePath(cachePath!!) }
+        return f.fromCache(id,type).absolutePath
     }
 
     private fun imageInCache(id: String,type: WHFileType):Boolean {
-        return imageFile.inCache(id,type)
+        val f=WHImage().apply { setCachePath(cachePath!!) }
+        return f.inCache(id,type)
     }
 
-    fun loadImageInfo(id: Int) {
-        if (imageInfoLoaded(id)) {
-            return
-        } else if (itemsOnPage > 0) {
-            val page = id.floorDiv(itemsOnPage)
-            loadPage(page)
+    fun imagePage(id: Int):Int {
+        return if (itemsOnPage > 0) id.floorDiv(itemsOnPage) else 0
+    }
+
+    private fun loadImage(img:ImageInfo,idx:Int, type: WHFileType) {
+        Log.d(tpTag,"loadImage in $idx")
+        threadPool.execute{
+            loadImageT(img,idx,type)
         }
+        Log.d(tpTag,"loadImage out $idx")
     }
-
-    private fun loadImage(idx:Int, type: WHFileType) {
+    private fun loadImageT(img:ImageInfo,idx:Int, type: WHFileType) {
         fun updateStatus(status:WHStatus) {
             when (type) {
-                WHFileType.IMAGE -> imagesData[idx]!!.imageStatus.value=status
-                WHFileType.THUMBNAIL -> imagesData[idx]!!.thumbStatus.value=status
+                WHFileType.IMAGE -> img.imageStatus=status
+                WHFileType.THUMBNAIL -> img.thumbStatus=status
             }
         }
         fun getStatus():WHStatus {
             return when (type) {
-                WHFileType.IMAGE -> imagesData[idx]!!.imageStatus.value
-                WHFileType.THUMBNAIL -> imagesData[idx]!!.thumbStatus.value
+                WHFileType.IMAGE -> img.imageStatus
+                WHFileType.THUMBNAIL -> img.thumbStatus
             }
         }
+        Log.d(tag,"Image $idx checking for loading")
 
-        imagesData[idx]?.let {
-            if (getStatus() == WHStatus.INFO) {
+           // Log.d(tag,"Image $idx in imagesData collection")
+        when (getStatus()) {
+            WHStatus.NONE, WHStatus.INFO -> {
                 updateStatus(WHStatus.LOADING)
                 coroutineScope!!.launch {
                     var v = WHStatus.INFO
-                    if (imageInCache(it.id, type)) {
+                    if (imageInCache(img.id, type)) {
+                        //  Log.d(tag,"Image $idx in cache")
                         v = WHStatus.LOADED
                     } else {
-                        updateStatus(WHStatus.LOADING)
                         when (type) {
-                            WHFileType.IMAGE ->
-                                //if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
+                            WHFileType.IMAGE -> {
+                                val f = WHImage().apply { setCachePath(cachePath!!) }
+                                if (f.toCache(img.id, type, img.imagePath).isNotEmpty()) {
                                     v = WHStatus.LOADED
-                                //}
-
-                            WHFileType.THUMBNAIL ->
-                                if (imageFile.toCache(it.id, type, it.imagePath).isNotEmpty()) {
-                                    v = WHStatus.LOADED
+                                } else {
+                                    v = WHStatus.ERROR
                                 }
+                            }
+                            WHFileType.THUMBNAIL -> {
+                                //  Log.d(tag, "Image $idx to cache called")
+                                val f=WHImage().apply { setCachePath(cachePath!!) }
+                                if (f.toCache(img.id, type, img.imagePath).isNotEmpty()) {
+                                    v = WHStatus.LOADED
+                                } else {
+                                    v = WHStatus.ERROR
+                                }
+                            }
                         }
                     }
+                    Log.d(tag, "Image $idx set status to $v")
                     updateStatus(v)
+                    imageInfo.emit(Pair(idx,img))
                 }
             }
+            WHStatus.ERROR,WHStatus.LOADING,WHStatus.LOADED -> {}
         }
     }
 }

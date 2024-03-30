@@ -3,14 +3,10 @@ package otus.gpb.homework.wallhaven.wh
 import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.http.GET
-import retrofit2.http.Query
 import retrofit2.Response
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.FieldMap
-import retrofit2.http.FormUrlEncoded
 import retrofit2.http.QueryMap
 
 //https://wallhaven.cc/help/api
@@ -19,37 +15,45 @@ data class WHSearchRequest(
     var search: String?=null,
     var tags: List<String>?=null,
     var id: String?=null,
-    var categories:WHCategories?=null,
+    var category:WHCategories?=null,
     var purity: WHPurity?=null,
     var order: WHOrder?=null,
     var sorting: WHSorting?=null,
-    var colors:List<WHColor>?=null,
+    var color:WHColor?=null,
     var seed:String?=null,
+    var ratio:WHRatio?=null,
     var page:Int?=null,
+    var apiKey:String?=null,
+    var width:Int?=null,
+    var height:Int?=null,
 ) {
     fun queryMap() : Map<String,String> {
         val requestData =mutableMapOf<String,String>()
 
         val q= mutableListOf<String>()
 
-        if (search!=null) {q.add(search!!)}
-
-        val tags=tags?.joinToString(separator = " ","+tag=") { it }
-        if (tags != null) {q.add(tags)}
-
-        if (q.isNotEmpty()) {requestData["q"]=q.joinToString { " " }}
+        search?.let {
+            if (it.isNotEmpty()) q.add(it.trim())
+        }
+        tags?.let {
+            val t=it.joinToString(separator = " ", "+tag=").trim()
+            if (t.isNotEmpty()) {q.add(t)}
+        }
+        if (q.isNotEmpty()) {requestData["q"]=q.joinToString().trim()}
 
         when (purity) {
             WHPurity.SFW -> requestData["purity"]="100"
             WHPurity.SKETCHY -> requestData["purity"]="010"
             WHPurity.NSFW -> requestData["purity"]="001"
-            null -> requestData["purity"]="111"
+            WHPurity.ALL -> requestData["purity"]="111"
+            null -> requestData["purity"]="100"
         }
-        when (categories) {
-            WHCategories.GENERAL -> requestData["category"]="100"
-            WHCategories.ANIME -> requestData["category"]="010"
-            WHCategories.PEOPLE -> requestData["category"]="001"
-            null -> requestData["category"]="111"
+        when (category) {
+            WHCategories.GENERAL -> requestData["categories"]="100"
+            WHCategories.ANIME -> requestData["categories"]="010"
+            WHCategories.PEOPLE -> requestData["categories"]="001"
+            WHCategories.ALL -> requestData["categories"]="111"
+            null -> requestData["categories"]="111"
         }
 
         when (sorting) {
@@ -62,6 +66,29 @@ data class WHSearchRequest(
             null -> {}
         }
 
+        when (ratio) {
+            WHRatio.R16x9 -> requestData["ratios"]="16x9"
+            WHRatio.R16x10 -> requestData["ratios"]="16x10"
+            WHRatio.R18x9 -> requestData["ratios"]="2"
+            WHRatio.R21x9 -> requestData["ratios"]="21x9"
+            WHRatio.R32x9 -> requestData["ratios"]="32x9"
+            WHRatio.R48x9 -> requestData["ratios"]="48x9"
+            WHRatio.R4x3 -> requestData["ratios"]="4x3"
+            WHRatio.R5x4 -> requestData["ratios"]="5x4"
+            WHRatio.R3x2 -> requestData["ratios"]="3x2"
+            WHRatio.R1x1 -> requestData["ratios"]="1"
+            WHRatio.R9x16 -> requestData["ratios"]="9x16"
+            WHRatio.R10x16 -> requestData["ratios"]="10x16"
+            WHRatio.R9x18 -> requestData["ratios"]="9x18"
+            WHRatio.R9x21 -> requestData["ratios"]="9x21"
+            WHRatio.R9x32 -> requestData["ratios"]="9x32"
+            WHRatio.R9x48 -> requestData["ratios"]="9x48"
+            WHRatio.R3x4 -> requestData["ratios"]="3x4"
+            WHRatio.R4x5 -> requestData["ratios"]="4x5"
+            WHRatio.R2x3 -> requestData["ratios"]="2x3"
+            WHRatio.ANY,null -> {}
+        }
+
         when (order) {
             WHOrder.DESC -> requestData["order"]="desc"
             WHOrder.ASC -> requestData["order"]="asc"
@@ -72,6 +99,14 @@ data class WHSearchRequest(
 
         if (page!=null && page!! >0 && page!! <9999) {requestData["page"]=page.toString()}
 
+        if (width!=null && height!=null && width!! >0 && width!! <9999 && height!! >0 && height!! <9999) {
+            requestData["resolutions"]="${width}x${height}"
+        }
+        color?.let {
+            requestData["colors"]=it.name
+        }
+
+        if (apiKey?.isNotEmpty() == true) {requestData["apikey"]=apiKey!!}
         return  requestData
     }
 }
@@ -87,7 +122,7 @@ data class WHSearchResponse(
         val last_page: Int,
         val per_page: Int,
         val query: Any?,
-        val seed: Any?,
+        val seed: String?,
         val total: Int
     )
     data class Data(

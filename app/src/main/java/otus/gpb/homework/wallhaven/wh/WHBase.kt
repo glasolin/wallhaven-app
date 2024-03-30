@@ -1,27 +1,24 @@
 package otus.gpb.homework.wallhaven.wh
 
 import android.graphics.Color
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.graphics.toColor
-import androidx.core.graphics.toColorInt
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 const val WH_BASE_URL = "https://wallhaven.cc/api/v1/"
-const val WH_THUMB_MAX_DIMENTION=150
+const val WH_THUMB_MAX_DIMENTION=110
 
 enum class WHLoadingStatus {
-    NONE,LOADING,LOADED
+    NONE,LOADING,LOADED, FAILED
+}
+
+enum class WHStatus {
+    NONE, INFO, LOADING, LOADED, ERROR
 }
 enum class WHSorting {
     DATE_ADDED, RELEVANCE, RANDOM, VIEWS, FAVORITES, TOPLIST
 }
 
 enum class WHCategories {
-    GENERAL,ANIME,PEOPLE;
+    GENERAL,ANIME,PEOPLE,ALL;
     companion object {
         fun fromString(s: String): WHCategories {
             return try {
@@ -33,18 +30,47 @@ enum class WHCategories {
     }
 }
 
-enum class WHStatus {
-    NONE, INFO, LOADING, LOADED
-}
-
 enum class WHPurity {
-    SFW, SKETCHY, NSFW;
+    SFW, SKETCHY, NSFW, ALL;
     companion object {
         fun fromString(s: String): WHPurity {
             return try {
                 WHPurity.valueOf(s)
             } catch (e: IllegalArgumentException) {
-                WHPurity.NSFW
+                WHPurity.SFW
+            }
+        }
+    }
+}
+
+enum class WHRatio {
+    ANY, R16x9,R16x10,R18x9,R21x9,R32x9,R48x9,R4x3,R5x4,R3x2,R1x1,
+         R9x16,R10x16,R9x18,R9x21,R9x32,R9x48,R3x4,R4x5,R2x3;
+    companion object {
+        fun fromString(s: String,width:Int=0,height: Int=0): WHRatio {
+            return when (s) {
+
+                "1.78" -> R16x9
+                "1.6" -> R16x10
+                "2" -> R18x9
+                "2.33" -> R21x9
+                "3.56" -> R32x9
+                "5.33" -> R48x9
+                "1.33" -> R4x3
+                "1.25" -> R5x4
+                "1.5" -> R3x2
+                "1" -> R1x1
+                "0.56" -> R9x16
+                "0.63" -> R10x16
+                "0.5" -> R9x18
+                "0.43","0.45" -> R9x21
+                "0.28" -> R9x32
+                "0.19" -> R9x48
+                "0.75" -> R3x4
+                "0.8" -> R4x5
+                "0.67","0.68" -> R2x3
+
+                else -> ANY//throw IllegalArgumentException("Unknown ratio $s (${width}x${height})")
             }
         }
     }
@@ -63,14 +89,14 @@ enum class WHOrder {
     }
 }
 
-data class Image(
+data class ImageInfo(
     val id: String,
     val thumbPath: String,
     val imagePath: String,
     val category: WHCategories,
     val colors: List<WHColor>,
     val purity: WHPurity,
-    val ratio: String,
+    val ratio: WHRatio,
     val resolution: String,
     val source: String,
     val width: Int,
@@ -79,8 +105,8 @@ data class Image(
     val thumbHeight:Int,
     val size: Int,
     val views: Int,
-    var thumbStatus:MutableStateFlow<WHStatus>,
-    var imageStatus:MutableStateFlow<WHStatus>,
+    var thumbStatus:WHStatus,
+    var imageStatus:WHStatus,
 )
 
 data class WHColor(val name: String, val value: Color) {
@@ -95,7 +121,23 @@ data class WHColor(val name: String, val value: Color) {
             } catch (e:Exception) {
                 Color.parseColor("#000000").toColor()
             }
-            return WHColor(c.toString(),c)
+            return WHColor(colorToString(c),c)
+        }
+
+        private fun colorToString(c:Color):String {
+            val rgb =  Color.rgb(c.red(),c.green(), c.blue())
+            return String.format("%06X", 0xFFFFFF and rgb).lowercase()
+        }
+        fun toStringValue(v:WHColor):String {
+            return colorToString(v.value)
+        }
+
+        fun toNamesList(list:List<WHColor>):List<String> {
+            val colorString= mutableListOf<String>()
+            list.forEach() {
+                colorString.add(it.name.lowercase())
+            }
+            return colorString
         }
     }
 }
@@ -109,17 +151,24 @@ object WHColors {
         .map{
             WHColor.fromString(it)
         }
+    fun toNamesList():List<String> {
+        var colorString= mutableListOf<String>()
+        colors.forEach() {
+            colorString.add(it.name)
+        }
+        return colorString
+    }
 }
 
-fun emptyImage():Image {
-    return Image(
+fun emptyImage():ImageInfo {
+    return ImageInfo(
         category= WHCategories.GENERAL,
         colors= emptyList(),
         id  = "",
         imagePath = "",
         thumbPath = "",
         purity = WHPurity.NSFW,
-        ratio = "",
+        ratio = WHRatio.ANY,
         resolution = "",
         source = "",
         views = 0,
@@ -128,20 +177,20 @@ fun emptyImage():Image {
         size = 0,
         thumbHeight = 0,
         thumbWidth = 0,
-        imageStatus = MutableStateFlow<WHStatus>(WHStatus.NONE),
-        thumbStatus = MutableStateFlow<WHStatus>(WHStatus.NONE),
+        imageStatus = WHStatus.NONE,
+        thumbStatus = WHStatus.NONE,
     )
 }
 
-fun WHGetThumbDimentions(imageWidth:Int ,imageHeight:Int):Pair<Int,Int> {
+fun WHGetThumbDimentions(imageWidth:Int ,imageHeight:Int, multiplier:Float=1.0f):Pair<Int,Int> {
     if ((imageWidth==0) || (imageHeight==0)) {return Pair(0,0)}
     var thumbWidth=0
     var thumbHeight=0
     if (imageWidth>imageHeight) {
-        thumbWidth= WH_THUMB_MAX_DIMENTION
+        thumbWidth= (WH_THUMB_MAX_DIMENTION.times(multiplier)).toInt()
         thumbHeight=(thumbWidth*imageHeight).floorDiv(imageWidth)
     } else {
-        thumbHeight= WH_THUMB_MAX_DIMENTION
+        thumbHeight= (WH_THUMB_MAX_DIMENTION.times(multiplier)).toInt()
         thumbWidth=(thumbHeight*imageWidth).floorDiv(imageHeight)
     }
     return Pair(thumbWidth,thumbHeight)

@@ -37,16 +37,18 @@ class WHImage {
         }
     }
     private fun checkCachedDirs() {
-        val x = listOf(
-            File(getPath(WHFileType.IMAGE)),
-            File(getPath(WHFileType.THUMBNAIL))
-        )
-        x.forEach() { dir ->
-            if (dir.exists() && !dir.isDirectory) {
-                dir.delete()
-            }
-            if (!dir.exists()) {
-                dir.mkdir()
+        if (cachePath?.isDirectory == true) {
+            val x = listOf(
+                File(getPath(WHFileType.IMAGE)),
+                File(getPath(WHFileType.THUMBNAIL))
+            )
+            x.forEach() { dir ->
+                if (dir.exists() && !dir.isDirectory) {
+                    dir.delete()
+                }
+                if (!dir.exists()) {
+                    dir.mkdir()
+                }
             }
         }
     }
@@ -63,6 +65,7 @@ class WHImage {
         if (body==null)
             return ""
         var input: InputStream? = null
+        var out=""
         try {
             input = body.byteStream()
             val path=getFileAbsPath(id,type)
@@ -75,14 +78,14 @@ class WHImage {
                 }
                 output.flush()
             }
-            return path
-        }catch (e:Exception){
+            out=path
+        } catch (e:Exception){
             Log.e(tag,e.toString())
         }
         finally {
             input?.close()
         }
-        return ""
+        return out
     }
     suspend fun toCache(id:String, type:WHFileType, url:String):String {
         val okHttpClient = OkHttpClient()
@@ -104,7 +107,7 @@ class WHImage {
                 out=saveFile(rc.body(),id,type)
                 Log.d(tag,"file saved to ${out}");
             }
-        } catch (_:Exception) {}
+        } catch (e:Exception) {Log.d(tag,"exception $e");}
         return out
     }
     fun inCache(id:String,type:WHFileType):Boolean {
