@@ -1,8 +1,11 @@
 package otus.gpb.homework.wallhaven.ui.screens
 
+import android.content.res.Resources
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -79,6 +82,7 @@ internal fun MainRoute(
     modifier: Modifier = Modifier,
     viewModel: MainActivityViewModel = hiltViewModel(),
 ) {
+    viewModel.data().refresh()
     MainScreen(
         data=viewModel.data(),
         state=viewModel.state(),
@@ -108,7 +112,7 @@ internal fun MainScreen(
                 .align(Alignment.End)
         )
         Spacer(Modifier.height(16.dp))
-        MainGrid(
+        MainGridNT(
             data=data,
             state=state,
         )
@@ -207,81 +211,39 @@ internal fun MainSorting(
     }
 }
 
-
 @Composable
-internal fun MainGrid(
+internal fun MainGridNT(
     data: UiData,
     state:UiState,
     modifier: Modifier = Modifier,
 ) {
-    val tag="MainGrid"
+    val tag="FavoritesMainGrid"
     val total=data.imagesTotal.intValue
     when (data.imagesTotal.intValue) {
         0 -> {
             Text("No data")
         }
         -1 -> {
+            data.loadImageInfo(0)
             Text("Not loaded")
         }
         else -> {
-            //Text(total.toString())
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Adaptive(WH_THUMB_MAX_DIMENTION.dp),
                 verticalItemSpacing = 2.dp,
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 content = {
                     items(count = total) { idx ->
-                        //Log.d(tag,"recompose for image $idx")
-                        data.pagesData[data.imagePage(idx)]?.let { pageStatus ->
-                            //Log.d(tag,"page ${data.imagePage(idx)} info set")
-                            when (pageStatus) {
-                                WHLoadingStatus.NONE -> {
-                                    data.loadPage(data.imagePage(idx))
-                                    Log.d(
-                                        tag,
-                                        "reloading page and recompose image ${idx} to ShowGalleryPlaceholder"
-                                    )
-                                    ShowGalleryPlaceholder()
-                                }
-
-                                WHLoadingStatus.FAILED, WHLoadingStatus.LOADING -> {
-                                    Log.d(
-                                        tag,
-                                        "page loading or failed, so recompose image ${idx} to ShowGalleryPlaceholder"
-                                    )
-                                    ShowGalleryPlaceholder()
-                                }
-
-                                WHLoadingStatus.LOADED -> {
-                                    data.imagesData[idx]?.let {
-                                        when (it.thumbStatus) {
-                                            WHStatus.LOADED -> {
-                                                Log.d(
-                                                    tag,
-                                                    "recompose image ${idx} to ShowThumbnail"
-                                                )
-                                                ShowThumbnail(data = data, image = it)
-                                            }
-
-                                            else -> {
-                                                Log.d(
-                                                    tag,
-                                                    "recompose image ${idx} to ShowThumbnailPlaceholder (${it.thumbWidth}x${it.thumbHeight})"
-                                                )
-                                                ShowThumbnailPlaceholder(it)
-                                            }
-                                        }
-                                    } ?: run {
-                                        data.loadImageInfo(idx)
-                                        Log.d(
-                                            tag,
-                                            "image info not loaded, so reloading image and recompose ${idx} to ShowGalleryPlaceholder"
-                                        )
-                                        ShowGalleryPlaceholder()
-                                    }
-                                }
+                        if (data.imagesData[idx] == null) {
+                            data.loadImageInfo(idx)
+                            ShowGalleryPlaceholder()
+                        } else {
+                            when (data.imagesData[idx]!!.thumbStatus) {
+                                WHStatus.NONE -> ShowGalleryPlaceholder()
+                                WHStatus.INFO, WHStatus.LOADING,WHStatus.ERROR -> ShowThumbnailPlaceholder(data.imagesData[idx]!!)
+                                WHStatus.LOADED -> ShowThumbnail(data = data, image = data.imagesData[idx]!!, state = state)
                             }
-                        } ?: data.loadPage(data.imagePage(idx))
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxSize(),
@@ -293,11 +255,14 @@ internal fun MainGrid(
 @Composable
 internal fun ShowThumbnail(
     data:UiData,
+    state: UiState,
     image:ImageInfo,
     modifier: Modifier = Modifier,
 ) {
+
     val painter =
         rememberAsyncImagePainter(model = File(data.imageFromCache(image.id, WHFileType.THUMBNAIL)))
+
     Image(
         painter = painter,
         contentDescription = "",
@@ -305,6 +270,10 @@ internal fun ShowThumbnail(
         modifier = Modifier
             .width(image.thumbWidth.dp)
             .height(image.thumbHeight.dp)
+            .clickable(true, null) {
+                data.selectImage(image.index)
+                state.navigate(Navigation.IMAGE)
+            }
     )
 }
 

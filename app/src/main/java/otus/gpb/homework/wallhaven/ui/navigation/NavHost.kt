@@ -8,6 +8,7 @@ import otus.gpb.homework.wallhaven.ui.screens.mainScreen
 import otus.gpb.homework.wallhaven.ui.screens.settingsScreen
 import otus.gpb.homework.wallhaven.ui.UiState
 import otus.gpb.homework.wallhaven.ui.screens.filtersScreen
+import otus.gpb.homework.wallhaven.ui.screens.imageScreen
 
 @Composable
 fun AppNavHost(
@@ -25,5 +26,6 @@ fun AppNavHost(
         favoritesScreen()
         settingsScreen()
         filtersScreen()
+        imageScreen()
     }
 }

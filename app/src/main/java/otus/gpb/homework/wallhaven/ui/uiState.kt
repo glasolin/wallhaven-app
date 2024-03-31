@@ -20,12 +20,14 @@ import kotlinx.coroutines.CoroutineScope
 import otus.gpb.homework.wallhaven.MainActivityViewModel
 import otus.gpb.homework.wallhaven.ui.navigation.FAVORITES_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.FILTERS_ROUTE
+import otus.gpb.homework.wallhaven.ui.navigation.IMAGE_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.MAIN_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.Navigation
 import otus.gpb.homework.wallhaven.ui.navigation.SETTINGS_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.WALLHAVEN_SITE_ROUTE
 import otus.gpb.homework.wallhaven.ui.screens.navigateToFavorites
 import otus.gpb.homework.wallhaven.ui.screens.navigateToFilters
+import otus.gpb.homework.wallhaven.ui.screens.navigateToImage
 import otus.gpb.homework.wallhaven.ui.screens.navigateToMain
 import otus.gpb.homework.wallhaven.ui.screens.navigateToSettings
 import javax.inject.Inject
@@ -50,6 +52,7 @@ class UiState constructor() {
             FAVORITES_ROUTE -> Navigation.FAVORITES
             SETTINGS_ROUTE -> Navigation.SETTINGS
             FILTERS_ROUTE -> Navigation.FILTERS
+            IMAGE_ROUTE -> Navigation.IMAGE
             else -> null
         }
 
@@ -80,12 +83,14 @@ class UiState constructor() {
                 Navigation.FAVORITES -> navController!!.navigateToFavorites(screenOptions)
                 Navigation.SETTINGS -> navController!!.navigateToSettings(screenOptions)
                 Navigation.FILTERS -> navController!!.navigateToFilters(screenOptions)
+                Navigation.IMAGE -> navController!!.navigateToImage(screenOptions)
             }
         }
     }
 
     fun navigateBack() {
-        navController!!.navigateUp()
+        navController!!.popBackStack()
+        //navController!!.navigateUp()
     }
 
     //@Composable

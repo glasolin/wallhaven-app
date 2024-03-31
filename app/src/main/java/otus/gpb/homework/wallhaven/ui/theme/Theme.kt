@@ -11,7 +11,10 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.HeartBroken
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Check
@@ -161,6 +164,9 @@ object AppIcons {
     val Checked = Icons.Filled.Check
     val Filter = Icons.Filled.FilterAlt
     var RemoveTag = Icons.Filled.Close
+    var toFavorites = Icons.Filled.Favorite
+    var fromFavorites = Icons.Filled.HeartBroken
+    var clearFavorites = Icons.Filled.DeleteForever
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
     val Upcoming = Icons.Rounded.Upcoming
     val UpcomingBorder = Icons.Outlined.Upcoming
@@ -360,16 +366,26 @@ data class BackgroundTheme(
 open class GalleryColors(
     val thumbNotLoaded:Color=Color.Unspecified,
     val thumbUnknown:Color=Color.Unspecified,
+
+    val imageNotLoaded:Color=Color.Unspecified,
+    val imageUnknown:Color=Color.Unspecified,
+
 )
 
 object GalleryLightColors:GalleryColors (
     thumbNotLoaded = Colors.Purple30,
-    thumbUnknown = Colors.Grey70
+    imageNotLoaded = Colors.Purple30,
+
+    thumbUnknown = Colors.Grey70,
+    imageUnknown = Colors.Grey70,
 )
 
 object GalleryDarkColors:GalleryColors (
     thumbNotLoaded = Colors.Purple30,
-    thumbUnknown = Colors.Grey50
+    imageNotLoaded = Colors.Purple30,
+
+    thumbUnknown = Colors.Grey50,
+    imageUnknown = Colors.Grey50,
 )
 
 open class PieChartColors(

@@ -56,6 +56,7 @@ class Settings {
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings.dat")
     private var preferences = SettingsData()
     private var context:Context?=null
+    private var oldJson=""
 
     var theme = storeObserver<Themes>(preferences.theme,"theme") {v->
         preferences.theme=v
@@ -117,18 +118,19 @@ class Settings {
                 } else {
                     Log.d(tag, "changed to ${it}")
                 }
-
                 onChange(it)
                 if (isLoaded()) {
-                    smartStore(data, it)
+                    Log.d(tag, "is loaded, calling smart store")
+                    smartStore()
                 }
             }
         }
     }
 
-    private fun <T> smartStore(old:T,new:T ) {
-        if (old!=new) {
-
+    private fun smartStore() {
+        val newJson = Json.encodeToString(preferences)
+        if (newJson!=oldJson) {
+            oldJson=newJson
             store()
         }
     }

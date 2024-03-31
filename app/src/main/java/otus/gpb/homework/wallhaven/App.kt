@@ -142,7 +142,7 @@ private fun AppTitleBar(
     var navigationIconContentDescription:String = ""
     var onNavigationClick: () -> Unit = {}
 
-    var titleRes:Int = 0
+    var title = ""
     var actions = mutableListOf<Triple<ImageVector,String,() -> Unit>>()
 
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.RELOAD)) {
@@ -156,7 +156,15 @@ private fun AppTitleBar(
         onNavigationClick = { state.navigateBack() }
     }
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.TITLE)) {
-        titleRes=currentScreen.titleTextId
+        title=stringResource(id = currentScreen.titleTextId)
+    }
+
+    if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.DYNAMIC_TITLE)) {
+        if (data.dynamicTitle.value.isNotEmpty()) {
+            title = data.dynamicTitle.value
+        } else {
+            title=stringResource(id = currentScreen.titleTextId)
+        }
     }
 
     currentScreen?.titleBarItemsIds!!.forEach {
@@ -180,7 +188,7 @@ private fun AppTitleBar(
         navigationIconContentDescription = navigationIconContentDescription,
         onNavigationClick = onNavigationClick,
         actions = actions,
-        titleRes = titleRes,
+        title = title,
     )
 }
 
@@ -315,14 +323,6 @@ fun NavigationRailItem(
     )
 }
 
-/**
- * Now in Android navigation rail with header and content slots. Wraps Material 3 [NavigationRail].
- *
- * @param modifier Modifier to be applied to the navigation rail.
- * @param header Optional header that may hold a floating action button or a logo.
- * @param content Destinations inside the navigation rail. This should contain multiple
- * [NavigationRailItem]s.
- */
 @Composable
 fun NavigationRail(
     modifier: Modifier = Modifier,
@@ -370,7 +370,7 @@ fun RowScope.NavigationBarItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopAppBar(
-    @StringRes titleRes: Int,
+    title: String,
     navigationIcon: ImageVector?,
     navigationIconContentDescription: String,
     actions:List<Triple<ImageVector,String,() -> Unit>>,
@@ -379,7 +379,7 @@ fun AppTopAppBar(
     onNavigationClick: () -> Unit = {},
 ) {
     CenterAlignedTopAppBar(
-        title = { Text(text = stringResource(id = titleRes)) },
+        title = { Text(text = title) },
         navigationIcon =  {
             if (navigationIcon!=null) {
                 IconButton(onClick = onNavigationClick) {

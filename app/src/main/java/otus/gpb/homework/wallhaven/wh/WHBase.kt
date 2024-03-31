@@ -91,8 +91,9 @@ enum class WHOrder {
 }
 
 data class ImageInfo(
+    var index:Int,
     val id: String,
-    val thumbPath: String,
+    var thumbPath: String,
     val imagePath: String,
     val category: WHCategories,
     val colors: List<WHColor>,
@@ -106,16 +107,21 @@ data class ImageInfo(
     val thumbHeight:Int,
     val size: Int,
     val views: Int,
+    var tags:List<WHTag>,
     var thumbStatus:WHStatus,
     var imageStatus:WHStatus,
+    var extendedInfoStatus: WHStatus,
+    var inFavorites: Boolean,
     var updated: Instant
 )
+
+data class WHTag(val id:Int,val tag:String)
 
 data class WHColor(val name: String, val value: Color) {
     companion object {
         fun fromString(s: String):WHColor {
             val c:Color?=try {
-                if ( s.trim().first().equals("#") ) {
+                if ( s.trim().first().equals('#') ) {
                     Color.parseColor(s).toColor()
                 } else {
                     Color.parseColor("#$s").toColor()
@@ -169,12 +175,13 @@ object WHColors {
 
 fun emptyImage():ImageInfo {
     return ImageInfo(
+        index = 0,
         category= WHCategories.GENERAL,
         colors= emptyList(),
         id  = "",
         imagePath = "",
         thumbPath = "",
-        purity = WHPurity.NSFW,
+        purity = WHPurity.SFW,
         ratio = WHRatio.ANY,
         resolution = "",
         source = "",
@@ -184,17 +191,20 @@ fun emptyImage():ImageInfo {
         size = 0,
         thumbHeight = 0,
         thumbWidth = 0,
+        tags = emptyList(),
         imageStatus = WHStatus.NONE,
         thumbStatus = WHStatus.NONE,
+        extendedInfoStatus = WHStatus.NONE,
+        inFavorites = false,
         updated = Instant.now()
     )
 }
 
-fun WHGetThumbDimentions(imageWidth:Int ,imageHeight:Int, multiplier:Float=1.0f):Pair<Int,Int> {
+fun WHGetThumbDimentions(imageWidth:Int ,imageHeight:Int, multiplier:Float=1.0f, byWidth:Boolean=false):Pair<Int,Int> {
     if ((imageWidth==0) || (imageHeight==0)) {return Pair(0,0)}
     var thumbWidth=0
     var thumbHeight=0
-    if (imageWidth>imageHeight) {
+    if ((imageWidth>imageHeight) || byWidth) {
         thumbWidth= (WH_THUMB_MAX_DIMENTION.times(multiplier)).toInt()
         thumbHeight=(thumbWidth*imageHeight).floorDiv(imageWidth)
     } else {
@@ -202,4 +212,14 @@ fun WHGetThumbDimentions(imageWidth:Int ,imageHeight:Int, multiplier:Float=1.0f)
         thumbWidth=(thumbHeight*imageWidth).floorDiv(imageHeight)
     }
     return Pair(thumbWidth,thumbHeight)
+}
+
+
+fun WHGetImageDimentions(imageWidth:Int, imageHeight:Int, maxWidth: Int, multiplier:Float=1.0f):Pair<Int,Int> {
+    if ((imageWidth==0) || (imageHeight==0)) {return Pair(0,0)}
+    var imgWidth=0
+    var imgHeight=0
+    imgWidth= (maxWidth.times(multiplier)).toInt()
+    imgHeight=(imgWidth*imageHeight).floorDiv(imageWidth)
+    return Pair(imgWidth,imgHeight)
 }
