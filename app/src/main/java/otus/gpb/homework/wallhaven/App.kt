@@ -148,7 +148,7 @@ private fun AppTitleBar(
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.RELOAD)) {
         navigationIcon = AppIcons.Reload
         navigationIconContentDescription = stringResource(R.string.title_bar_reload)
-        onNavigationClick={  }
+        onNavigationClick={ data.refresh() }
     }
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.BACK)) {
         navigationIcon = AppIcons.ArrowBack
@@ -160,8 +160,8 @@ private fun AppTitleBar(
     }
 
     if (currentScreen?.titleBarItemsIds!!.contains(TitleBarItems.DYNAMIC_TITLE)) {
-        if (data.dynamicTitle.value.isNotEmpty()) {
-            title = data.dynamicTitle.value
+        if (state.dynamicTitle.value.isNotEmpty()) {
+            title = state.dynamicTitle.value
         } else {
             title=stringResource(id = currentScreen.titleTextId)
         }

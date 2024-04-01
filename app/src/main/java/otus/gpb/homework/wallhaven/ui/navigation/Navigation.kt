@@ -44,7 +44,7 @@ enum class Navigation(
         unselectedIcon = Icons.Outlined.Home,
         iconTextId = R.string.navigation_main,
         titleTextId = R.string.navigation_main,
-        titleBarItemsIds = listOf(TitleBarItems.RELOAD,TitleBarItems.TITLE,TitleBarItems.SITE),
+        titleBarItemsIds = listOf(TitleBarItems.RELOAD,TitleBarItems.DYNAMIC_TITLE,TitleBarItems.SITE),
     ),
     FAVORITES(
         selectedIcon = Icons.Rounded.Bookmarks,

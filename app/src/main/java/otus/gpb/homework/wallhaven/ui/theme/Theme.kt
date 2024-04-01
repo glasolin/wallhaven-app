@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.CheckCircleOutline
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Upcoming
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bookmark
@@ -168,6 +170,8 @@ object AppIcons {
     var toFavorites = Icons.Filled.Favorite
     var fromFavorites = Icons.Filled.HeartBroken
     var clearFavorites = Icons.Filled.DeleteForever
+    var imageToLeft=Icons.Outlined.ChevronLeft
+    var imageToRight=Icons.Outlined.ChevronRight
     val nuke = Icons.Filled.Bolt
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
     val Upcoming = Icons.Rounded.Upcoming

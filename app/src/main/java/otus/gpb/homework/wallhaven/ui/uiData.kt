@@ -5,6 +5,7 @@ import android.os.Environment
 import android.os.StatFs
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.asIntState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -109,7 +110,6 @@ class UiData {
     val imagesTotal= mutableIntStateOf(-1)
     val selectedImage = mutableStateOf<ImageInfo?>(null)
     private var ready=false
-    var dynamicTitle = mutableStateOf<String>("")
 
 
     init {
@@ -172,6 +172,8 @@ class UiData {
             currentRequestData.tags=it
             refresh()
         }
+
+
     }
 
     fun setContext(context: Context) {
@@ -314,7 +316,7 @@ class UiData {
         ready=true
     }
 
-    private fun updateStorageUsage() {
+    fun updateStorageUsage() {
         storeUsage.value= mapOf(
             StoreDataTypes.CACHE to getCachedDiskSpace(),
             StoreDataTypes.FAVORITES to getDataDiskSpace(),
@@ -402,7 +404,7 @@ class UiData {
                 return@launch
             }
             Log.d(tag,"page $page fetched")
-            imagesTotal.intValue=list.meta.total
+            setTotal(list.meta.total)
             itemsOnPage=list.meta.per_page
             list.meta.seed?.let {
                 if (currentRequestData.seed.isNullOrEmpty()) {
@@ -448,6 +450,11 @@ class UiData {
             delay(FORCE_PAGE_LOAD_DELAY.toLong())
             pageInfo.emit(Pair(page,WHPageStatus.LOADED))
         }
+    }
+
+    private fun setTotal(total: Int) {
+        imagesTotal.intValue = total
+
     }
 
     private fun loadExtendedInfo(img:ImageInfo) {
@@ -595,7 +602,6 @@ class UiData {
         Log.d(tag,"selected image is $idx")
         imagesData[idx]?.let {
             selectedImage.value=it
-            dynamicTitle.value="${it.width}x${it.height}"
             loadImage(it.copy(),WHFileType.IMAGE,)
             inFavorites(it.copy())
             loadExtendedInfo(it.copy())
@@ -641,7 +647,7 @@ class UiData {
     }
 
     private fun clear() {
-        imagesTotal.intValue=-1
+        setTotal(-1)
         imagesData.clear()
         pagesData.clear()
     }
@@ -668,16 +674,29 @@ class UiData {
         }
     }
 
-    fun nukeFavorites() {
-        coroutineScope!!.launch {
-            Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.nuke()
-        }
-    }
 
     fun selectFavouriteImage(image: ImageInfo) {
         image.index=-1
         image.inFavorites=true
         selectedImage.value=image
     }
+
+    fun toPreviousImage() {
+        selectedImage.value?.let {
+            if (it.index>0) {
+                selectImage(it.index-1)
+            }
+        }
+    }
+
+    fun toNextImage() {
+        selectedImage.value?.let {
+            if (it.index < (imagesTotal.value-1)) {
+                selectImage(it.index+1)
+            }
+        }
+    }
+
+
 }
 

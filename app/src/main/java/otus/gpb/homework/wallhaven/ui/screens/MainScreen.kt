@@ -39,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -84,6 +85,11 @@ internal fun MainRoute(
     modifier: Modifier = Modifier,
     viewModel: MainActivityViewModel = hiltViewModel(),
 ) {
+    val data = viewModel.data()
+    val state = viewModel.state()
+    if (data.imagesTotal.intValue >=0)  {
+        state.setDynamicTitle(stringResource(R.string.found_matches).format(data.imagesTotal.intValue))
+    }
     MainScreen(
         data=viewModel.data(),
         state=viewModel.state(),
@@ -111,22 +117,22 @@ internal fun MainScreen(
              MainSortingList(
                 data = data,
                 state = state,
-                modifier=Modifier
-                    .padding(start=4.dp,top=8.dp)
+                modifier= Modifier
+                    .padding(start = 4.dp, top = 8.dp)
                     .weight(0.45f)
             )
             MainOrder(
                 data = data,
                 state = state,
-                modifier=Modifier
-                    .padding(start=4.dp,top=8.dp)
+                modifier= Modifier
+                    .padding(start = 4.dp, top = 8.dp)
                     .weight(0.15f)
             )
             MainFilter(
                 data = data,
                 state = state,
-                modifier=Modifier
-                    .padding(start=4.dp,top=8.dp)
+                modifier= Modifier
+                    .padding(start = 4.dp, top = 8.dp)
                     .weight(0.150f)
             )
         }

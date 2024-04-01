@@ -74,14 +74,13 @@ class Favorites(private val context: Context) {
     }
 
     private fun checkDataDirs() {
-        if (cachePath?.isDirectory == true) {
-            val x = listOf(
-                File(getDataPath(WHFileType.IMAGE)),
-                File(getDataPath(WHFileType.THUMBNAIL))
-            )
-            x.forEach() { dir ->
-                checkDir(dir)
-            }
+        checkDir(dataPath!!)
+        val x = listOf(
+            File(getDataPath(WHFileType.IMAGE)),
+            File(getDataPath(WHFileType.THUMBNAIL))
+        )
+        x.forEach() { dir ->
+            checkDir(dir)
         }
     }
 
@@ -91,7 +90,7 @@ class Favorites(private val context: Context) {
 
     fun setPath(cacheDir:File,dataDir:File) {
         cachePath= cacheDir
-        dataPath = dataDir
+        dataPath = File("$dataDir/data")
         checkDataDirs()
     }
 
@@ -99,12 +98,7 @@ class Favorites(private val context: Context) {
         context,
         AppDatabase::class.java, "favorites"
     ).build()
-    private val db_nots = Room.databaseBuilder(
-        context,
-        AppDatabase::class.java, "favorites"
-    )
-        .allowMainThreadQueries()
-        .build()
+
     private val favDao = db.favImagesDao()
 
     suspend fun fetch():List<ImageInfo> {
@@ -163,7 +157,7 @@ class Favorites(private val context: Context) {
                     srcT.copyTo(trgT,true)
                     val srcI=File(whi.getFileAbsPath(img.id,WHFileType.IMAGE))
                     val trgI=File(getDataFileAbsPath(img.id, WHFileType.IMAGE))
-                    srcT.copyTo(trgT,true)
+                    srcI.copyTo(trgI,true)
                     true
             } else {
                 false
@@ -175,9 +169,6 @@ class Favorites(private val context: Context) {
         return File(getDataFileAbsPath(id,type))
     }
 
-    suspend fun nuke() {
-        db_nots.clearAllTables()
-    }
     fun getDataSize(): Long {
         return getDirSize(this.dataPath!!)
     }

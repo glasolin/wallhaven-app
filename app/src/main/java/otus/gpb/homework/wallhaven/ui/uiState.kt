@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.util.trace
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination
@@ -45,6 +46,11 @@ class UiState constructor() {
     val currentRoute: NavDestination?
         @Composable get() = navController!!.currentBackStackEntryAsState().value?.destination
 
+    var dynamicTitle = mutableStateOf<String>("")
+
+    fun setDynamicTitle(title:String) {
+        dynamicTitle.value=title
+    }
 
     val currentScreen: Navigation?
         @Composable get() = when (currentRoute?.route) {

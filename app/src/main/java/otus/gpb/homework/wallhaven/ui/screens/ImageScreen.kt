@@ -23,8 +23,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -84,9 +86,14 @@ fun NavGraphBuilder.imageScreen() {
 internal fun ImageRoute(
     viewModel: MainActivityViewModel = hiltViewModel(),
 ) {
+    val data = viewModel.data()
+    val state = viewModel.state()
+    data.selectedImage?.value?.let {
+        state.setDynamicTitle("${it.width}x${it.height}, ${data.bytesToHuman(it.size.toLong())}")
+    }
     ImageScreen(
-        data = viewModel.data(),
-        state = viewModel.state(),
+        data = data,
+        state = state,
         modifier= Modifier
             .padding(all = 10.dp)
             .scrollable(state = rememberScrollState(), orientation = Orientation.Vertical)
@@ -129,11 +136,40 @@ internal fun ImageScreen(
                 (columnSize.value.width).toInt()
             }
             data.selectedImage?.value?.let { img ->
-                ShowImageColors(
-                    data = data,
-                    state = state,
-                    image =  data.selectedImage.value!!,
-                )
+                Row {
+                    Column(
+                        modifier = Modifier
+                            .weight(0.05f)
+                            .padding(top = 4.dp)
+                    ) {
+                        if (img.index>0) {
+                            Icon(
+                                AppIcons.imageToLeft, "",Modifier.clickable { data.toPreviousImage() }
+                            )
+                        }
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(0.9f)
+                    ) {
+                        ShowImageColors(
+                            data = data,
+                            state = state,
+                            image = data.selectedImage.value!!,
+                        )
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(0.05f)
+                            .padding(top = 4.dp)
+                    ) {
+                        if (img.index < (data.imagesTotal.value-1)) {
+                            Icon(
+                                AppIcons.imageToRight, "",Modifier.clickable { data.toNextImage() }
+                            )
+                        }
+                    }
+                }
                 if (img.imageStatus == WHStatus.LOADED) {
                     Log.d(tag, "Recompose to ShowImage")
                     ShowImage(

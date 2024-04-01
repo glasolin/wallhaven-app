@@ -33,11 +33,14 @@ fun checkDir(dir:File) {
 
 fun getDirSize(dir: File): Long {
     var size: Long = 0
-    for (file in dir.listFiles()) {
-        if (file != null && file.isDirectory()) {
-            size += getDirSize(file)
-        } else if (file != null && file.isFile()) {
-            size += file.length()
+    val list=dir.listFiles()
+    list?.let {
+        for (file in list) {
+            if (file != null && file.isDirectory()) {
+                size += getDirSize(file)
+            } else if (file != null && file.isFile()) {
+                size += file.length()
+            }
         }
     }
     return size
@@ -58,14 +61,13 @@ class WHImage {
         }
     }
     private fun checkCachedDirs() {
-        if (cachePath?.isDirectory == true) {
-            val x = listOf(
-                File(getPath(WHFileType.IMAGE)),
-                File(getPath(WHFileType.THUMBNAIL))
-            )
-            x.forEach() { dir ->
-                checkDir(dir)
-            }
+        checkDir(cachePath!!)
+        val x = listOf(
+            File(getPath(WHFileType.IMAGE)),
+            File(getPath(WHFileType.THUMBNAIL))
+        )
+        x.forEach() { dir ->
+            checkDir(dir)
         }
     }
 
@@ -140,5 +142,6 @@ class WHImage {
 
     fun clearCache() {
         cachePath!!.deleteRecursively()
+        checkCachedDirs()
     }
 }
