@@ -181,7 +181,7 @@ internal fun ImageScreen(
                     )
                 } else {
                     Log.d(tag, "Recompose to ShowImagePlaceholder")
-                    ShowImagePlaceholder(maxWidth = maxWidth,image = img)
+                    ShowImagePlaceholder(maxWidth = maxWidth,image = img,data=data)
                 }
                 if (img.inFavorites) {
                     ExtendedFloatingActionButton(
@@ -307,18 +307,33 @@ internal fun ShowImage(
 
 @Composable
 internal fun ShowImagePlaceholder(
+    data:UiData,
     image:ImageInfo,
     maxWidth:Int,
     modifier: Modifier = Modifier,
 ) {
     val (iw,ih)=WHGetImageDimentions(image.width,image.height,maxWidth,1.0f/Resources.getSystem().displayMetrics.density)
-    Box(
-        modifier = Modifier
-            .width(iw.dp)
-            .height(iw.dp)
-            .clip(RectangleShape)
-            .background(LocalGalleryColors.current.imageNotLoaded)
-    )
+    if (!image.inFavorites && image.thumbStatus==WHStatus.LOADED) {
+        val painter =
+            rememberAsyncImagePainter(model = File(data.imageFromCache(image.id, WHFileType.THUMBNAIL)))
+
+        Image(
+            painter = painter,
+            contentDescription = "",
+            contentScale = ContentScale.FillBounds,
+            modifier = modifier
+                .width(iw.dp)
+                .height(ih.dp)
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .width(iw.dp)
+                .height(iw.dp)
+                .clip(RectangleShape)
+                .background(LocalGalleryColors.current.imageNotLoaded)
+        )
+    }
 }
 
 @Composable
