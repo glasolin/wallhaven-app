@@ -22,6 +22,27 @@ interface WHFetchImage {
     suspend fun download(@Url file:String) : Response<ResponseBody>
 }
 
+fun checkDir(dir:File) {
+    if (dir.exists() && !dir.isDirectory) {
+        dir.delete()
+    }
+    if (!dir.exists()) {
+        dir.mkdir()
+    }
+}
+
+fun getDirSize(dir: File): Long {
+    var size: Long = 0
+    for (file in dir.listFiles()) {
+        if (file != null && file.isDirectory()) {
+            size += getDirSize(file)
+        } else if (file != null && file.isFile()) {
+            size += file.length()
+        }
+    }
+    return size
+}
+
 class WHImage {
     private val tag = "WHImage"
     private val IMAGES_DIR ="images"
@@ -43,12 +64,7 @@ class WHImage {
                 File(getPath(WHFileType.THUMBNAIL))
             )
             x.forEach() { dir ->
-                if (dir.exists() && !dir.isDirectory) {
-                    dir.delete()
-                }
-                if (!dir.exists()) {
-                    dir.mkdir()
-                }
+                checkDir(dir)
             }
         }
     }
@@ -58,7 +74,7 @@ class WHImage {
         checkCachedDirs()
     }
 
-    private fun getFileAbsPath(id:String, type:WHFileType):String {
+    fun getFileAbsPath(id:String, type:WHFileType):String {
         return "${getPath(type)}/$id"
     }
     private fun saveFile(body: ResponseBody?, id: String, type: WHFileType):String{
@@ -118,4 +134,11 @@ class WHImage {
         return File(getFileAbsPath(id,type))
     }
 
+    fun getCacheSize(): Long {
+        return getDirSize(this.cachePath!!)
+    }
+
+    fun clearCache() {
+        cachePath!!.deleteRecursively()
+    }
 }

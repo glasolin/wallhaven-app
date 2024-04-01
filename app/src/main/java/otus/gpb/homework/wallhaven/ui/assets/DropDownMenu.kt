@@ -36,6 +36,7 @@ fun <T> DropdownMenuBox(
                 value = items[selected]!!,
                 onValueChange = {},
                 readOnly = true,
+                singleLine = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier.menuAnchor()
             )

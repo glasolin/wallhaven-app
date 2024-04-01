@@ -113,7 +113,6 @@ internal fun ImageScreen(
 ) {
     val tag = "ImageScreen"
 
-    val idx=data.selectedImage.asIntState().intValue
     val columnSize = remember { mutableStateOf(Size.Zero) }
     Log.d(tag,"Recompose ImageScreen")
     Row (
@@ -129,28 +128,28 @@ internal fun ImageScreen(
             val maxWidth = LocalDensity.current.run {
                 (columnSize.value.width).toInt()
             }
-            if (data.imagesData.contains(idx)) {
+            data.selectedImage?.value?.let { img ->
                 ShowImageColors(
                     data = data,
                     state = state,
-                    image =  data.imagesData[idx]!!,
+                    image =  data.selectedImage.value!!,
                 )
-                if (data.imagesData[idx]!!.imageStatus == WHStatus.LOADED) {
+                if (img.imageStatus == WHStatus.LOADED) {
                     Log.d(tag, "Recompose to ShowImage")
                     ShowImage(
                         data = data,
                         maxWidth = maxWidth,
-                        image = data.imagesData[idx]!!,
+                        image = img,
                         modifier= Modifier
                             .padding(top = 10.dp)
                     )
                 } else {
                     Log.d(tag, "Recompose to ShowImagePlaceholder")
-                    ShowImagePlaceholder(maxWidth = maxWidth,image = data.imagesData[idx]!!)
+                    ShowImagePlaceholder(maxWidth = maxWidth,image = img)
                 }
-                if (data.imagesData[idx]!!.inFavorites) {
+                if (img.inFavorites) {
                     ExtendedFloatingActionButton(
-                        onClick = { data.removeFromFavorites(data.imagesData[idx]!!) },
+                        onClick = { data.removeFromFavorites(img) },
                         icon = { Icon(AppIcons.fromFavorites, "") },
                         text = { Text(stringResource(R.string.image_button_remove_from_favorites)) },
                         elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
@@ -160,7 +159,7 @@ internal fun ImageScreen(
                     )
                 } else {
                     ExtendedFloatingActionButton(
-                        onClick = { data.addToFavorites(data.imagesData[idx]!!) },
+                        onClick = { data.addToFavorites(img) },
                         icon = { Icon(AppIcons.toFavorites, "") },
                         text = { Text(stringResource(R.string.image_button_add_to_favorites)) },
                         elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
@@ -169,16 +168,14 @@ internal fun ImageScreen(
                             .padding(top = 24.dp, bottom = 8.dp),
                     )
                 }
-                if (data.imagesData[idx]!!.extendedInfoStatus == WHStatus.LOADED) {
+                if (img.extendedInfoStatus == WHStatus.LOADED) {
                     ShowImageTags(
                         data = data,
                         state = state,
-                        image = data.imagesData[idx]!!,
+                        image = img,
                     )
                 }
-            } else {
-                ShowImageNoDataPlaceholder(maxWidth)
-            }
+            } ?: ShowImageNoDataPlaceholder(maxWidth)
         }
     }
 }

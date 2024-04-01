@@ -2,12 +2,19 @@ package otus.gpb.homework.wallhaven.wh
 
 import android.graphics.Color
 import androidx.core.graphics.toColor
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialInfo
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.time.Instant
 
 const val WH_BASE_URL = "https://wallhaven.cc/api/v1/"
 const val WH_THUMB_MAX_DIMENTION=110
 
-enum class WHLoadingStatus {
+enum class WHPageStatus {
     NONE,LOADING,LOADED, FAILED
 }
 
@@ -90,6 +97,32 @@ enum class WHOrder {
     }
 }
 
+object InstantSerializer : KSerializer<Instant> {
+    override val descriptor = PrimitiveSerialDescriptor("Instant", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): Instant {
+        val mills = decoder.decodeString().toLong()
+        return Instant.ofEpochMilli(mills)
+    }
+
+    override fun serialize(encoder: Encoder, value: Instant) {
+        encoder.encodeString(value.toEpochMilli().toString())
+    }
+}
+
+object ColorSerializer : KSerializer<Color> {
+    override val descriptor = PrimitiveSerialDescriptor("Color", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): Color {
+        val v=WHColor.fromString(decoder.decodeString())
+        return v.value
+    }
+
+    override fun serialize(encoder: Encoder, value: Color) {
+        encoder.encodeString(WHColor.colorToString(value))
+    }
+}
+@Serializable
 data class ImageInfo(
     var index:Int,
     val id: String,
@@ -112,12 +145,14 @@ data class ImageInfo(
     var imageStatus:WHStatus,
     var extendedInfoStatus: WHStatus,
     var inFavorites: Boolean,
+    @Serializable(with = InstantSerializer::class)
     var updated: Instant
 )
-
+@Serializable
 data class WHTag(val id:Int,val tag:String)
 
-data class WHColor(val name: String, val value: Color) {
+@Serializable
+data class WHColor(val name: String, @Serializable(with = ColorSerializer::class) val value: Color) {
     companion object {
         fun fromString(s: String):WHColor {
             val c:Color?=try {
@@ -137,7 +172,7 @@ data class WHColor(val name: String, val value: Color) {
             }
         }
 
-        private fun colorToString(c:Color):String {
+        fun colorToString(c:Color):String {
             val rgb =  Color.rgb(c.red(),c.green(), c.blue())
             return String.format("%06X", 0xFFFFFF and rgb).lowercase()
         }

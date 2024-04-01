@@ -5,6 +5,7 @@ import android.os.Environment
 import android.os.StatFs
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
@@ -33,7 +35,7 @@ import otus.gpb.homework.wallhaven.wh.WHFileType
 import otus.gpb.homework.wallhaven.wh.WHGetThumbDimentions
 import otus.gpb.homework.wallhaven.wh.WHImage
 import otus.gpb.homework.wallhaven.wh.WHImageExtendedInfo
-import otus.gpb.homework.wallhaven.wh.WHLoadingStatus
+import otus.gpb.homework.wallhaven.wh.WHPageStatus
 import otus.gpb.homework.wallhaven.wh.WHPurity
 import otus.gpb.homework.wallhaven.wh.WHRatio
 import otus.gpb.homework.wallhaven.wh.WHSearch
@@ -65,8 +67,8 @@ const val IMAGE_LOAD_MIN_DELAY_MS = 500
 const val IMAGE_LOAD_MAX_DELAY_MS = 1500
 const val IMAGE_RELOAD_DELAY_SEC = 3
 
-const val FORCE_IMAGE_LOAD_DELAY = 500
-const val FORCE_PAGE_LOAD_DELAY = 500
+const val FORCE_IMAGE_LOAD_DELAY = 0
+const val FORCE_PAGE_LOAD_DELAY = 0
 
 
 class UiData {
@@ -83,6 +85,9 @@ class UiData {
     private var cachePath: File?=null
         get() {requireNotNull(field){println("Cache path was not initialized")};return field}
 
+    private var dataPath: File?=null
+        get() {requireNotNull(field){println("Data path was not initialized")};return field}
+
     var storeUsage = mutableStateOf<Map<StoreDataTypes,Long>>(emptyMap())
     private var currentRequestData=WHSearchRequest()
 
@@ -90,19 +95,20 @@ class UiData {
     private var itemsOnPage = 0
 
     private var imageInfo = MutableSharedFlow<Triple<Int,ImageInfo,UpdateParts>?>()
-    private var pageInfo = MutableSharedFlow<Pair<Int,WHLoadingStatus>?>()
+    private var pageInfo = MutableSharedFlow<Pair<Int,WHPageStatus>?>()
 
-    var imagesData= mutableStateMapOf<Int,ImageInfo>()
-    var pagesData = mutableStateMapOf<Int,WHLoadingStatus>()
+    private var _favoritesData=MutableStateFlow<List<ImageInfo>>(emptyList())
+    val favoritesData=_favoritesData.asStateFlow()
+    var imagesData=mutableStateMapOf<Int,ImageInfo>()
+    var pagesData =mutableStateMapOf<Int,WHPageStatus>()
 
     private var suggester = MutableSharedFlow<List<String>>()
     var tagSuggestion= mutableStateOf<List<String>>(emptyList())
 
     private var jobs= mutableListOf<Job>()
     val imagesTotal= mutableIntStateOf(-1)
-    val selectedImage = mutableIntStateOf(-1)
+    val selectedImage = mutableStateOf<ImageInfo?>(null)
     private var ready=false
-    private var nopages = false
     var dynamicTitle = mutableStateOf<String>("")
 
 
@@ -116,7 +122,6 @@ class UiData {
             corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.SECONDS, workQueue
         )
 
-        updateStorageUsage()
         searchString.observeForever {
             currentRequestData.search=it
             refresh()
@@ -175,15 +180,19 @@ class UiData {
         if (context.cacheDir!=null) {
             cachePath=context.cacheDir
         }
+        if (context.dataDir!=null) {
+            dataPath=context.dataDir
+        }
+        updateStorageUsage()
     }
 
     fun settings():Settings=settings
     fun settingsLoaded():Boolean {
-        if (!settings.isLoaded()) {
+        return if (!settings.isLoaded()) {
             settings.load()
-            return false
+            false
         } else {
-            return true
+            true
         }
     }
     fun load() {
@@ -201,7 +210,7 @@ class UiData {
         fun get(): SnapshotStateMap<Int, ImageInfo> {
             return imagesData
         }
-        fun getByIds(idx:Int):ImageInfo {
+        fun getById(idx:Int):ImageInfo {
             return imagesData[idx]!!
         }
         fun setById(idx:Int,img:ImageInfo) {
@@ -218,27 +227,32 @@ class UiData {
             }
             when (upd) {
                 UpdateParts.ALL -> setById(idx,img)
-                UpdateParts.THUMB_INFO -> setById(idx,getByIds(idx).copy(
+                UpdateParts.THUMB_INFO -> setById(idx,getById(idx).copy(
                         thumbStatus = img.thumbStatus,
                     ))
                 UpdateParts.IMAGE_INFO -> {
-                    setById(idx,getByIds(idx).copy(
+                    setById(idx,getById(idx).copy(
                         imageStatus=img.imageStatus,
                     ))
                 }
                 UpdateParts.EXTENDED_INFO -> {
-                    setById(idx,getByIds(idx).copy(
+                    setById(idx,getById(idx).copy(
                         extendedInfoStatus = img.extendedInfoStatus,
                         tags = img.tags,
                     ))
                 }
                 UpdateParts.FAVORITE_INFO -> {
-                    setById(idx,getByIds(idx).copy(
+                    setById(idx,getById(idx).copy(
                         inFavorites = img.inFavorites,
                     ))
                 }
             }
-            loadImage(getByIds(idx).copy(), WHFileType.THUMBNAIL)
+            loadImage(getById(idx).copy(), WHFileType.THUMBNAIL)
+            selectedImage?.value?.let {
+                if (it.index == idx) {
+                    selectedImage.value=getById(idx).copy()
+                }
+            }
         }
         if (IMAGE_RELOAD_DELAY_SEC > 0) {
             get().filter { (_, img) ->
@@ -264,11 +278,9 @@ class UiData {
         jobs.add(coroutineScope!!.launch {
             pageInfo.collect() {it->
                 yield()
-                if (!nopages) {
-                    it?.let { (idx, status) ->
-                        //Log.d(tag,"page $idx updated to status $status")
-                        pagesData[idx] = status
-                    }
+                it?.let { (idx, status) ->
+                    //Log.d(tag,"page $idx updated to status $status")
+                    pagesData[idx] = status
                 }
             }
         })
@@ -276,6 +288,11 @@ class UiData {
             suggester.collect() {
                 //Log.d(tag,"Added ${it} to suggestion list")
                 tagSuggestion.value=it
+            }
+        })
+        jobs.add(coroutineScope!!.launch {
+            _favoritesData.collect() {
+                _favoritesData.value=it
             }
         })
     }
@@ -299,18 +316,16 @@ class UiData {
 
     private fun updateStorageUsage() {
         storeUsage.value= mapOf(
-            StoreDataTypes.CACHE to 100,
-            StoreDataTypes.FAVORITES to 210,
-            StoreDataTypes.FREE to 1000,
+            StoreDataTypes.CACHE to getCachedDiskSpace(),
+            StoreDataTypes.FAVORITES to getDataDiskSpace(),
+            StoreDataTypes.FREE to getFreeDiskSpace(),
         )
     }
 
     fun clearStorage() {
-        storeUsage.value= mapOf(
-            StoreDataTypes.CACHE to 0,
-            StoreDataTypes.FAVORITES to 0,
-            StoreDataTypes.FREE to getFreeDiskSpace(),
-        )
+        clear()
+        WHImage().apply { setCachePath(cachePath!!) }.clearCache()
+        updateStorageUsage()
     }
 
     fun getTotalDiskSpace():Long {
@@ -320,6 +335,13 @@ class UiData {
     private fun getFreeDiskSpace():Long {
         val statFs = StatFs(Environment.getDataDirectory().absolutePath);
         return statFs.freeBlocksLong * statFs.blockSizeLong
+    }
+
+    private fun getCachedDiskSpace():Long {
+        return WHImage().apply { setCachePath(cachePath!!) }.getCacheSize()
+    }
+    private fun getDataDiskSpace():Long {
+        return  Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.getDataSize()
     }
 
     fun bytesToHuman(size: Long): String {
@@ -337,13 +359,14 @@ class UiData {
             if (size < Pb) return getString(context!!, R.string.size_Tb).format(size / Tb)
             if (size < Eb) return getString(context!!, R.string.size_Eb).format(size / Pb)
             return getString(context!!, R.string.size_Eb).format(size / Eb)
-        } finally {
-            return "0"
-        }
+        } catch (_:Exception) {}
+        return "0"
     }
 
     private fun isPageLoaded(page:Int):Boolean {
-        return (pagesData.containsKey(page) && pagesData[page]!=WHLoadingStatus.NONE) && (pagesData[page]!=WHLoadingStatus.FAILED)
+        return (pagesData.containsKey(page) && (
+                (pagesData[page]==WHPageStatus.LOADED) || (pagesData[page] ==WHPageStatus.FAILED))
+                )
     }
     fun loadImageInfo(id: Int) {
         if (!imageInfoLoaded(id)) {
@@ -352,28 +375,22 @@ class UiData {
     }
 
     private fun loadPage(page:Int=0) {
-        if (nopages) {
-            return
-        }
         if (isPageLoaded(page)) {
             return
         }
-        if (pagesData[page]==WHLoadingStatus.LOADING) {
+        if (!pagesData.containsKey(page)) {
+            pagesData[page]=WHPageStatus.NONE
+        }
+        if (pagesData[page]==WHPageStatus.LOADING) {
             return
         }
+        pagesData[page]=WHPageStatus.LOADING
         threadPool.execute {
             loadPageT(page)
         }
     }
 
     private fun loadPageT(page:Int=0) {
-        if (isPageLoaded(page)) {
-            return
-        }
-        if (pagesData[page]==WHLoadingStatus.LOADING) {
-            return
-        }
-        pagesData[page]=WHLoadingStatus.LOADING
         coroutineScope!!.launch {
             Log.d(tag,"loading page info $page")
             val s= WHSearch()
@@ -381,7 +398,7 @@ class UiData {
                 this.page=page+1
             })
             if (list == null ) {
-                pageInfo.emit(Pair(page,WHLoadingStatus.NONE))
+                pageInfo.emit(Pair(page,WHPageStatus.FAILED))
                 return@launch
             }
             Log.d(tag,"page $page fetched")
@@ -392,7 +409,6 @@ class UiData {
                     currentRequestData.seed = it
                 }
             }
-
             for (i in 0 ..<min(list.meta.per_page,list.data.size)) {
                 val idx=i+(list.meta.per_page*(list.meta.current_page-1))
                 with (list.data[i]) {
@@ -430,7 +446,7 @@ class UiData {
             }
             //Log.d(tag,"emit page $page as ${WHLoadingStatus.LOADED.toString()}")
             delay(FORCE_PAGE_LOAD_DELAY.toLong())
-            pageInfo.emit(Pair(page,WHLoadingStatus.LOADED))
+            pageInfo.emit(Pair(page,WHPageStatus.LOADED))
         }
     }
 
@@ -464,7 +480,6 @@ class UiData {
     }
 
     fun refresh() {
-        nopages=false
         clear()
     }
 
@@ -475,6 +490,11 @@ class UiData {
     fun imageFromCache(id:String,type: WHFileType):String {
         val f=WHImage().apply { setCachePath(cachePath!!) }
         return f.fromCache(id,type).absolutePath
+    }
+
+    fun imageFromFavorite(id:String,type: WHFileType):String {
+        val f=Favorites(context!!).apply { setPath(cachePath!!,dataPath!!) }
+        return f.fromData(id,type).absolutePath
     }
 
     private fun imageInCache(id: String,type: WHFileType):Boolean {
@@ -572,9 +592,9 @@ class UiData {
     }
 
     fun selectImage(idx: Int) {
-        selectedImage.intValue=idx
         Log.d(tag,"selected image is $idx")
         imagesData[idx]?.let {
+            selectedImage.value=it
             dynamicTitle.value="${it.width}x${it.height}"
             loadImage(it.copy(),WHFileType.IMAGE,)
             inFavorites(it.copy())
@@ -595,15 +615,16 @@ class UiData {
 
     fun addToFavorites(img:ImageInfo) {
         coroutineScope!!.launch {
-            Favorites(context!!).add(img.id)
-            imageInfo.emit(
-                Triple(img.index,img.copy(inFavorites = true),UpdateParts.FAVORITE_INFO)
-            )
+            if (Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.add(img)) {
+                imageInfo.emit(
+                    Triple(img.index, img.copy(inFavorites = true), UpdateParts.FAVORITE_INFO)
+                )
+            }
         }
     }
-    fun inFavorites(img:ImageInfo) {
+    private fun inFavorites(img:ImageInfo) {
         coroutineScope!!.launch {
-            val rc=Favorites(context!!).exists(img.id)
+            val rc=Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.exists(img.id)
             imageInfo.emit(
                 Triple(img.index,img.copy(inFavorites = rc),UpdateParts.FAVORITE_INFO)
             )
@@ -612,53 +633,10 @@ class UiData {
 
     fun removeFromFavorites(img:ImageInfo) {
         coroutineScope!!.launch {
-            Favorites(context!!).remove(img.id)
+            Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.remove(img)
             imageInfo.emit(
                 Triple(img.index, img.copy(inFavorites = false),UpdateParts.FAVORITE_INFO)
             )
-        }
-    }
-
-    private fun loadFavorite(idx:Int, id:String) {
-        threadPool.execute() {
-            coroutineScope!!.launch {
-                val ei=WHImageExtendedInfo(currentRequestData.apiKey)
-                val info =ei.fetchExtendedInfo(id)
-                info?.let {
-                    imageInfo.emit(
-                        with (it.data) {
-                            val(thumbWidth,thumbHeight)= WHGetThumbDimentions(dimension_x,dimension_y)
-                            Triple(
-                                idx,
-                                ImageInfo(
-                                    index = idx,
-                                    id = id,
-                                    imagePath = path,
-                                    thumbPath = thumbs.small,
-                                    category = WHCategories.fromString(category),
-                                    colors = colors.map { WHColor.fromString(it) },
-                                    width = dimension_x,
-                                    height = dimension_y,
-                                    purity = WHPurity.fromString(purity),
-                                    ratio = WHRatio.fromString(ratio, dimension_x, dimension_y),
-                                    resolution = resolution,
-                                    size = file_size,
-                                    source = source,
-                                    views = views,
-                                    tags = ei.tagsFromExtendedInfo(info),
-                                    thumbStatus = WHStatus.INFO,
-                                    imageStatus = WHStatus.INFO,
-                                    extendedInfoStatus = WHStatus.LOADED,
-                                    thumbHeight = thumbHeight,
-                                    thumbWidth = thumbWidth,
-                                    updated = Instant.now(),
-                                    inFavorites = false,
-                                ), UpdateParts.ALL
-                            )
-                        }
-                    )
-                }
-            }
         }
     }
 
@@ -669,24 +647,37 @@ class UiData {
     }
 
     fun favoritesList() {
-        clear()
-        nopages=true
         coroutineScope!!.launch {
-            val list=Favorites(context!!).fetch()
-            imagesTotal.intValue=list.size
-            list.forEachIndexed{idx,id ->
-                val page=imagePage(idx)
-                pageInfo.emit(Pair(page,WHLoadingStatus.LOADED))
-                loadFavorite(idx,id)
+            var f=Favorites(context!!)
+            f.setPath(cachePath!!,dataPath!!)
+            val list=f.fetch().mapIndexed{i,v->
+                v.copy(
+                    imagePath = f.getDataFileAbsPath(v.id,WHFileType.IMAGE),
+                    thumbPath = f.getDataFileAbsPath(v.id,WHFileType.THUMBNAIL),
+                    index = i,
+                )
             }
+            _favoritesData.emit(list)
         }
     }
 
     fun clearFavorites() {
         coroutineScope!!.launch {
-            Favorites(context!!).removeAll()
+            Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.removeAll()
             favoritesList()
         }
+    }
+
+    fun nukeFavorites() {
+        coroutineScope!!.launch {
+            Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.nuke()
+        }
+    }
+
+    fun selectFavouriteImage(image: ImageInfo) {
+        image.index=-1
+        image.inFavorites=true
+        selectedImage.value=image
     }
 }
 

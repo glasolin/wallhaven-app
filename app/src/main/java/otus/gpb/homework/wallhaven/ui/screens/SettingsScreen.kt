@@ -81,6 +81,7 @@ import otus.gpb.homework.wallhaven.ui.theme.Colors
 import otus.gpb.homework.wallhaven.ui.theme.LocalStoragePieChartColors
 import kotlin.math.min
 
+const val SHOW_NUKE_BUTTON = false
 
 fun NavController.navigateToSettings(navOptions: NavOptions) = navigate(SETTINGS_ROUTE, navOptions)
 
@@ -204,15 +205,32 @@ internal fun SettingsScreen(
                 }
             }
         }
-        ExtendedFloatingActionButton(
-            onClick = {data.clearStorage()},
-            icon = { Icon(AppIcons.ClearCache,"") },
-            text={ Text(stringResource(R.string.settings_storage_button_clear)) },
-            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-            modifier= Modifier
-                .align(Alignment.End)
-                .padding(top = 24.dp, bottom = 8.dp),
-        )
+        Row() {
+            if (SHOW_NUKE_BUTTON) {
+                Column {
+                    ExtendedFloatingActionButton(
+                        onClick = { data.nukeFavorites() },
+                        icon = { Icon(AppIcons.nuke, "") },
+                        text = { Text(stringResource(R.string.settings_favorites_button_nuke)) },
+                        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(top = 24.dp, bottom = 8.dp),
+                    )
+                }
+            }
+            Column(modifier = Modifier.weight(1.0f)) {
+                ExtendedFloatingActionButton(
+                    onClick = { data.clearStorage() },
+                    icon = { Icon(AppIcons.ClearCache, "") },
+                    text = { Text(stringResource(R.string.settings_storage_button_clear)) },
+                    elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(top = 24.dp, bottom = 8.dp),
+                )
+            }
+        }
     }
 }
 @Composable

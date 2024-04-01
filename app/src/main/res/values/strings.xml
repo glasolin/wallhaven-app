@@ -79,4 +79,5 @@
     <string name="image_button_add_to_favorites">Add to favorites</string>
     <string name="image_button_remove_from_favorites">Remove from favorite</string>
     <string name="image_button_clear_favorites">Clear favorites</string>
+    <string name="settings_favorites_button_nuke">Nuke favorites</string>
 </resources>

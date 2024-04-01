@@ -189,11 +189,16 @@ class WHSearch {
     suspend fun search (request:WHSearchRequest):WHSearchResponse? {
         val retrofit = getInstance()
         val searchApi = retrofit.create(WHSearchApi::class.java)
-        try {
+        return try {
             val rc=searchApi.search(request.queryMap())
-            if (rc!!.isSuccessful) {Log.d("WHSearch",rc.body().toString());return rc.body() as WHSearchResponse} else {return null}
+            if (rc.isSuccessful) {
+                Log.d("WHSearch",rc.body().toString())
+                rc.body() as WHSearchResponse
+            } else {
+                null
+            }
         } catch (e:Exception) {
-            return null
+            null
         }
     }
 }

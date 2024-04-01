@@ -22,6 +22,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.asIntState
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,7 +62,7 @@ import otus.gpb.homework.wallhaven.ui.theme.LocalGalleryColors
 import otus.gpb.homework.wallhaven.wh.ImageInfo
 import otus.gpb.homework.wallhaven.wh.WHFileType
 import otus.gpb.homework.wallhaven.wh.WHGetThumbDimentions
-import otus.gpb.homework.wallhaven.wh.WHLoadingStatus
+import otus.gpb.homework.wallhaven.wh.WHPageStatus
 import otus.gpb.homework.wallhaven.wh.WHStatus
 import otus.gpb.homework.wallhaven.wh.WH_THUMB_MAX_DIMENTION
 import java.io.File
@@ -82,7 +84,6 @@ internal fun MainRoute(
     modifier: Modifier = Modifier,
     viewModel: MainActivityViewModel = hiltViewModel(),
 ) {
-    viewModel.data().refresh()
     MainScreen(
         data=viewModel.data(),
         state=viewModel.state(),
@@ -100,19 +101,37 @@ internal fun MainScreen(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier=modifier) {
-        MainFilters(
-            data=data,
-            state=state,
-        )
+        Row{
+            MainSearch(
+                data=data,
+                state=state,
+                modifier=Modifier
+                    .weight(0.40f)
+                )
+             MainSortingList(
+                data = data,
+                state = state,
+                modifier=Modifier
+                    .padding(start=4.dp,top=8.dp)
+                    .weight(0.45f)
+            )
+            MainOrder(
+                data = data,
+                state = state,
+                modifier=Modifier
+                    .padding(start=4.dp,top=8.dp)
+                    .weight(0.15f)
+            )
+            MainFilter(
+                data = data,
+                state = state,
+                modifier=Modifier
+                    .padding(start=4.dp,top=8.dp)
+                    .weight(0.150f)
+            )
+        }
         Spacer(Modifier.height(16.dp))
-        MainSorting(
-            data=data,
-            state=state,
-            Modifier
-                .align(Alignment.End)
-        )
-        Spacer(Modifier.height(16.dp))
-        MainGridNT(
+        MainGrid(
             data=data,
             state=state,
         )
@@ -131,41 +150,31 @@ private fun PreviewMainScreen() {
     }
 }
 
+
 @Composable
-internal fun MainFilters(
+internal fun MainFilter(
     data: UiData,
     state:UiState,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier=modifier) {
-        Column(modifier = Modifier
-            .weight(0.6f)
-            .padding(all = 0.dp)
-            .align(Alignment.Bottom)
+
+    Column(
+        modifier = modifier
+    ) {
+        FloatingActionButton(
+            onClick = {state.navigate(Navigation.FILTERS)},
+            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+            modifier= Modifier
+                //.align(Alignment.End)
+                //.padding(top = 8.dp, start = 8.dp)
         ) {
-            OutlinedTextField(
-                value = data.searchString.observeAsState().value!!,
-                singleLine = true,
-                onValueChange = {data.searchString.value=it },
-                label = { Text(stringResource(R.string.main_search_by_tag)) },
-            )
-        }
-        Column {
-            ExtendedFloatingActionButton(
-                onClick = {state.navigate(Navigation.FILTERS)},
-                icon = { Icon(AppIcons.Filter,"") },
-                text={ Text(stringResource(R.string.main_filters)) },
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-                modifier= Modifier
-                    .align(Alignment.End)
-                    .padding(top = 8.dp, start = 8.dp)
-            )
+            Icon(AppIcons.Filter,"")
         }
     }
 }
 
 @Composable
-internal fun MainSorting(
+internal fun MainSortingList(
     data: UiData,
     state:UiState,
     modifier: Modifier = Modifier,
@@ -178,41 +187,62 @@ internal fun MainSorting(
         WHSorting.FAVORITES to stringResource(R.string.main_sorting_favorites),
         WHSorting.TOPLIST to stringResource(R.string.main_sorting_toplist),
     )
-    Row(modifier=modifier) {
-        Column(
-            modifier=Modifier
-                .width(160.dp)
-        ){
-            DropdownMenuBox(
-                items = items,
-                selected = data.settings().sorting.observeAsState().value!!,
-                onSelect = { s -> data.settings().sorting.value = s },
-                modifier = Modifier
-                    .align(Alignment.End)
-            )
-        }
-        Column(
-            modifier=Modifier
-                .padding(start= 8.dp)
-        ) {
-            FloatingActionButton(
-
-                onClick = { data.settings().order.value = WHOrder.switch(data.settings().order.value!!) },
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-            ) {
-                val icon = if (data.settings().order.observeAsState().value!! == WHOrder.DESC) {
-                    AppIcons.SortDesc
-                } else {
-                    AppIcons.SortAsc
-                }
-                Icon(icon, "")
-            }
-       }
+    Column(
+        modifier=modifier
+    ){
+        DropdownMenuBox(
+            items = items,
+            selected = data.settings().sorting.observeAsState().value!!,
+            onSelect = { s -> data.settings().sorting.value = s },
+            modifier = Modifier
+                //.align(Alignment.End)
+        )
     }
 }
 
 @Composable
-internal fun MainGridNT(
+internal fun MainSearch(
+    data: UiData,
+    state:UiState,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = data.searchString.observeAsState().value!!,
+            singleLine = true,
+            onValueChange = { data.searchString.value = it },
+            label = { Text(stringResource(R.string.main_search_by_tag)) },
+        )
+    }
+}
+
+@Composable
+internal fun MainOrder(
+    data: UiData,
+    state:UiState,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier=modifier
+    ) {
+        FloatingActionButton(
+            onClick = { data.settings().order.value = WHOrder.switch(data.settings().order.value!!) },
+            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+        ) {
+            val icon = if (data.settings().order.observeAsState().value!! == WHOrder.DESC) {
+                AppIcons.SortDesc
+            } else {
+                AppIcons.SortAsc
+            }
+            Icon(icon, "")
+        }
+    }
+}
+
+@Composable
+internal fun MainGrid(
     data: UiData,
     state:UiState,
     modifier: Modifier = Modifier,
