@@ -379,19 +379,19 @@ open class GalleryColors(
 )
 
 object GalleryLightColors:GalleryColors (
-    thumbNotLoaded = Colors.Purple30,
-    imageNotLoaded = Colors.Purple30,
+    thumbNotLoaded = Colors.Purple90,
+    imageNotLoaded = Colors.Purple90,
 
-    thumbUnknown = Colors.Grey70,
-    imageUnknown = Colors.Grey70,
+    thumbUnknown = Colors.Purple80,
+    imageUnknown = Colors.Purple80,
 )
 
 object GalleryDarkColors:GalleryColors (
-    thumbNotLoaded = Colors.Purple30,
-    imageNotLoaded = Colors.Purple30,
+    thumbNotLoaded = Colors.Purple10,
+    imageNotLoaded = Colors.Purple10,
 
-    thumbUnknown = Colors.Grey50,
-    imageUnknown = Colors.Grey50,
+    thumbUnknown = Colors.Purple20,
+    imageUnknown = Colors.Purple20,
 )
 
 open class PieChartColors(

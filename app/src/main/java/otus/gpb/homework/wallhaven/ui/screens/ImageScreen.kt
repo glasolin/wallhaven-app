@@ -163,7 +163,7 @@ internal fun ImageScreen(
                             .weight(0.05f)
                             .padding(top = 4.dp)
                     ) {
-                        if (img.index < (data.imagesTotal.value-1)) {
+                        if ((img.index>0) && (img.index < (data.imagesTotal.value-1))) {
                             Icon(
                                 AppIcons.imageToRight, "",Modifier.clickable { data.toNextImage() }
                             )
@@ -284,7 +284,13 @@ internal fun ShowImage(
 ) {
     val tag = "ShowImage"
     val painter =
-        rememberAsyncImagePainter(model = File(data.imageFromCache(image.id, WHFileType.IMAGE)))
+        rememberAsyncImagePainter(model = File(
+            if (image.inFavorites) {
+                data.imageFromFavorite(image.id,WHFileType.IMAGE)
+            } else {
+                data.imageFromCache(image.id, WHFileType.IMAGE)
+            }
+        ))
     val (iw,ih)=WHGetImageDimentions(image.width,image.height,maxWidth,1.0f/Resources.getSystem().displayMetrics.density)
 
     Log.d(tag,"Display is ${getScreenWidth()}x${getScreenHeight()} density is ${Resources.getSystem().displayMetrics.density}")

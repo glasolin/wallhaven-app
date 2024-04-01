@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -78,21 +79,37 @@ internal fun FavoritesScreen(
 ) {
     val images=data.favoritesData.collectAsState().value
     Column(modifier=modifier) {
-        if (images.isNotEmpty()) {
-            ExtendedFloatingActionButton(
-                onClick = { data.clearFavorites() },
-                icon = { Icon(AppIcons.clearFavorites, "") },
-                text = { Text(stringResource(R.string.image_button_clear_favorites)) },
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(top = 24.dp, bottom = 8.dp),
+        Row (
+            modifier=Modifier
+                .weight(0.87f)
+        ) {
+            FavoritesMainGrid(
+                data = data,
+                state = state,
             )
         }
-        FavoritesMainGrid(
-            data = data,
-            state = state,
-        )
+        Row (
+            modifier=Modifier
+                .weight(0.13f)
+        ) {
+            if (images.isNotEmpty()) {
+                Column(
+                    modifier= Modifier
+                        .weight(1.0f)
+                        .align(Alignment.Bottom)
+                ) {
+                    ExtendedFloatingActionButton(
+                        onClick = { data.clearFavorites() },
+                        icon = { Icon(AppIcons.clearFavorites, "") },
+                        text = { Text(stringResource(R.string.image_button_clear_favorites)) },
+                        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(top = 24.dp, bottom = 8.dp),
+                    )
+                }
+            }
+        }
     }
 }
 
