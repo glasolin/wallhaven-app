@@ -314,7 +314,7 @@ internal fun ShowImagePlaceholder(
 ) {
     val tag = "ShowImagePlaceholder"
     val (iw,ih)=WHGetImageDimentions(image.thumbWidth,image.thumbHeight,maxWidth,1.0f/Resources.getSystem().displayMetrics.density)
-    Log.d(tag,"Image ${image.index} is (${iw}x${ih}) from (${image.width}x${image.height}), maxWidth is $maxWidth")
+    Log.d(tag,"Image ${image.index} is (${iw}x${ih}) from (${image.width}x${image.height}, thumb ${image.thumbWidth}x${image.thumbHeight}), maxWidth is $maxWidth")
     if (!image.inFavorites && image.thumbStatus==WHStatus.LOADED) {
         val painter =
             rememberAsyncImagePainter(model = File(data.imageFromCache(image.id, WHFileType.THUMBNAIL)))
@@ -322,10 +322,11 @@ internal fun ShowImagePlaceholder(
         Image(
             painter = painter,
             contentDescription = "",
-            contentScale = ContentScale.FillBounds,
+            contentScale = ContentScale.Fit,
             modifier = modifier
                 .width(iw.dp)
                 .height(ih.dp)
+                // .background(Color.Yellow)
         )
     } else {
         Box(

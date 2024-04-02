@@ -422,7 +422,7 @@ class UiData {
                                 index=0,
                                 id = id,
                                 imagePath = path,
-                                thumbPath = thumbs.small,
+                                thumbPath = thumbs.original,
                                 category = WHCategories.fromString(category),
                                 colors = colors.map { WHColor.fromString(it) },
                                 width = dimension_x,
