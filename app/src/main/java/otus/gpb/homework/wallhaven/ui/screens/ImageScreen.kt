@@ -179,31 +179,33 @@ internal fun ImageScreen(
                         modifier= Modifier
                             .padding(top = 10.dp)
                     )
+                    if (img.inFavorites) {
+                        ExtendedFloatingActionButton(
+                            onClick = { data.removeFromFavorites(img) },
+                            icon = { Icon(AppIcons.fromFavorites, "") },
+                            text = { Text(stringResource(R.string.image_button_remove_from_favorites)) },
+                            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+                            modifier = Modifier
+                                .align(Alignment.End)
+                                .padding(top = 24.dp, bottom = 8.dp),
+                        )
+                    } else {
+                        ExtendedFloatingActionButton(
+                            onClick = { data.addToFavorites(img) },
+                            icon = { Icon(AppIcons.toFavorites, "") },
+                            text = { Text(stringResource(R.string.image_button_add_to_favorites)) },
+                            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+                            modifier = Modifier
+                                .align(Alignment.End)
+                                .padding(top = 24.dp, bottom = 8.dp),
+                        )
+                    }
+
                 } else {
                     Log.d(tag, "Recompose to ShowImagePlaceholder")
                     ShowImagePlaceholder(maxWidth = maxWidth,image = img,data=data)
                 }
-                if (img.inFavorites) {
-                    ExtendedFloatingActionButton(
-                        onClick = { data.removeFromFavorites(img) },
-                        icon = { Icon(AppIcons.fromFavorites, "") },
-                        text = { Text(stringResource(R.string.image_button_remove_from_favorites)) },
-                        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .padding(top = 24.dp, bottom = 8.dp),
-                    )
-                } else {
-                    ExtendedFloatingActionButton(
-                        onClick = { data.addToFavorites(img) },
-                        icon = { Icon(AppIcons.toFavorites, "") },
-                        text = { Text(stringResource(R.string.image_button_add_to_favorites)) },
-                        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .padding(top = 24.dp, bottom = 8.dp),
-                    )
-                }
+
                 if (img.extendedInfoStatus == WHStatus.LOADED) {
                     ShowImageTags(
                         data = data,
@@ -335,7 +337,7 @@ internal fun ShowImagePlaceholder(
             modifier = modifier
                 .width(iw.dp)
                 .height(ih.dp)
-                .background(Color.Yellow)
+                //.background(Color.Yellow)
         )
     } else {
         Box(

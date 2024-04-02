@@ -54,7 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
 
 
 
-class Favorites(private val context: Context) {
+class Favorites() {
     private val tag = "Favorites"
     private val IMAGES_DIR ="images"
     private val THUMBS_DIR ="thumbs"
@@ -65,6 +65,30 @@ class Favorites(private val context: Context) {
     private var dataPath: File? = null
         get() {requireNotNull(field){println("Data path was not initialized")};return field}
 
+    private var context: Context? = null
+        get() {requireNotNull(field){println("Context was not initialized")};return field}
+
+    private var db : AppDatabase? = null
+        get() {
+            if (field == null) {
+                field = Room.databaseBuilder(
+                    context!!,
+                    AppDatabase::class.java, "favorites"
+                ).build()
+            }
+            return field
+        }
+
+    private var favDao:FavImagesDao? = null
+        get () {
+            if (field==null) {
+                db?.let {
+                    field = it.favImagesDao()
+                }
+            }
+            requireNotNull(field){println("favDao was not initialized")}
+            return field
+        }
 
     private fun getDataPath(type: WHFileType):String {
         return when (type) {
@@ -88,21 +112,17 @@ class Favorites(private val context: Context) {
         return "${getDataPath(type)}/$id"
     }
 
+    fun setContext(con: Context) {
+        context=con
+    }
+
     fun setPath(cacheDir:File,dataDir:File) {
         cachePath= cacheDir
         dataPath = File("$dataDir/data")
         checkDataDirs()
     }
-
-    private val db = Room.databaseBuilder(
-        context,
-        AppDatabase::class.java, "favorites"
-    ).build()
-
-    private val favDao = db.favImagesDao()
-
     suspend fun fetch():List<ImageInfo> {
-        val list:List<FavImages> = favDao.list()
+        val list:List<FavImages> = favDao!!.list()
         val x=
             try {
                 val x=list.map{
@@ -118,7 +138,7 @@ class Favorites(private val context: Context) {
         var success=false
         if (!exists(img.id)) {
             if (copyToFavorites(img)) {
-                favDao.add(FavImages(img.id, Json.encodeToString(img)))
+                favDao!!.add(FavImages(img.id, Json.encodeToString(img)))
                 success=true
             }
         }
@@ -131,7 +151,7 @@ class Favorites(private val context: Context) {
             fImage.delete()
             fThumb.delete()
         } catch (_:Exception) {}
-        favDao.remove(img.id)
+        favDao!!.remove(img.id)
     }
 
     suspend fun removeAll() {
@@ -139,11 +159,11 @@ class Favorites(private val context: Context) {
             dataPath!!.deleteRecursively()
             checkDataDirs()
         } catch (_:Exception) {}
-        favDao.removeAll()
+        favDao!!.removeAll()
     }
 
     suspend fun exists(id:String):Boolean {
-        val info=favDao.get(id)
+        val info=favDao!!.get(id)
         return info?.id?.isNotEmpty() ?: false
     }
 

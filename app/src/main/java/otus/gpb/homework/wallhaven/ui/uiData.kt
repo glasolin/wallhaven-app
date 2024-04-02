@@ -111,6 +111,9 @@ class UiData {
     val selectedImage = mutableStateOf<ImageInfo?>(null)
     private var ready=false
 
+    private val favorites=Favorites()
+    private val whImg=WHImage()
+
 
     init {
         val corePoolSize = 4
@@ -185,6 +188,9 @@ class UiData {
         if (context.dataDir!=null) {
             dataPath=context.dataDir
         }
+        favorites.setContext(context)
+        favorites.setPath(cachePath!!,dataPath!!)
+        whImg.setCachePath(cachePath!!)
         updateStorageUsage()
     }
 
@@ -326,7 +332,7 @@ class UiData {
 
     fun clearStorage() {
         clear()
-        WHImage().apply { setCachePath(cachePath!!) }.clearCache()
+        whImg.clearCache()
         updateStorageUsage()
     }
 
@@ -340,10 +346,10 @@ class UiData {
     }
 
     private fun getCachedDiskSpace():Long {
-        return WHImage().apply { setCachePath(cachePath!!) }.getCacheSize()
+        return whImg.getCacheSize()
     }
     private fun getDataDiskSpace():Long {
-        return  Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.getDataSize()
+        return  favorites.getDataSize()
     }
 
     fun bytesToHuman(size: Long): String {
@@ -495,18 +501,15 @@ class UiData {
     }
 
     fun imageFromCache(id:String,type: WHFileType):String {
-        val f=WHImage().apply { setCachePath(cachePath!!) }
-        return f.fromCache(id,type).absolutePath
+        return whImg.fromCache(id,type).absolutePath
     }
 
     fun imageFromFavorite(id:String,type: WHFileType):String {
-        val f=Favorites(context!!).apply { setPath(cachePath!!,dataPath!!) }
-        return f.fromData(id,type).absolutePath
+        return favorites.fromData(id,type).absolutePath
     }
 
     private fun imageInCache(id: String,type: WHFileType):Boolean {
-        val f=WHImage().apply { setCachePath(cachePath!!) }
-        return f.inCache(id,type)
+        return whImg.inCache(id,type)
     }
 
     fun imagePage(id: Int):Int {
@@ -560,15 +563,14 @@ class UiData {
                         v = WHStatus.LOADED
                     } else {
                         //  Log.d(tag, "Image $idx to cache called")
-                        val f=WHImage().apply { setCachePath(cachePath!!) }
                         var tries= IMAGE_LOAD_TRIES
-                        while (f.toCache(img.id, type, getPath()).isEmpty()) {
+                        while (whImg.toCache(img.id, type, getPath()).isEmpty()) {
                             Log.d(tag,"Image ${img.index} try ${tries}")
                             tries--
                             if (tries == 0) {break}
                             delay(Random.nextInt(IMAGE_LOAD_MIN_DELAY_MS, IMAGE_LOAD_MAX_DELAY_MS).toLong())
                         }
-                        v = if (f.inCache(img.id,type)) {
+                        v = if (whImg.inCache(img.id,type)) {
                             WHStatus.LOADED
                         } else {
                             WHStatus.ERROR
@@ -621,7 +623,7 @@ class UiData {
 
     fun addToFavorites(img:ImageInfo) {
         coroutineScope!!.launch {
-            if (Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.add(img)) {
+            if (favorites.add(img)) {
                 imageInfo.emit(
                     Triple(img.index, img.copy(inFavorites = true), UpdateParts.FAVORITE_INFO)
                 )
@@ -630,7 +632,7 @@ class UiData {
     }
     private fun inFavorites(img:ImageInfo) {
         coroutineScope!!.launch {
-            val rc=Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.exists(img.id)
+            val rc=favorites.exists(img.id)
             imageInfo.emit(
                 Triple(img.index,img.copy(inFavorites = rc),UpdateParts.FAVORITE_INFO)
             )
@@ -639,7 +641,7 @@ class UiData {
 
     fun removeFromFavorites(img:ImageInfo) {
         coroutineScope!!.launch {
-            Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.remove(img)
+            favorites.remove(img)
             imageInfo.emit(
                 Triple(img.index, img.copy(inFavorites = false),UpdateParts.FAVORITE_INFO)
             )
@@ -654,12 +656,10 @@ class UiData {
 
     fun favoritesList() {
         coroutineScope!!.launch {
-            var f=Favorites(context!!)
-            f.setPath(cachePath!!,dataPath!!)
-            val list=f.fetch().mapIndexed{i,v->
+            val list=favorites.fetch().mapIndexed{i,v->
                 v.copy(
-                    imagePath = f.getDataFileAbsPath(v.id,WHFileType.IMAGE),
-                    thumbPath = f.getDataFileAbsPath(v.id,WHFileType.THUMBNAIL),
+                    imagePath = favorites.getDataFileAbsPath(v.id,WHFileType.IMAGE),
+                    thumbPath = favorites.getDataFileAbsPath(v.id,WHFileType.THUMBNAIL),
                     index = i,
                 )
             }
@@ -669,7 +669,7 @@ class UiData {
 
     fun clearFavorites() {
         coroutineScope!!.launch {
-            Favorites(context!!).apply{setPath(cachePath!!,dataPath!!)}.removeAll()
+            favorites.removeAll()
             favoritesList()
         }
     }
