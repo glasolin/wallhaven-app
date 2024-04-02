@@ -163,7 +163,7 @@ internal fun ImageScreen(
                             .weight(0.05f)
                             .padding(top = 4.dp)
                     ) {
-                        if ((img.index>0) && (img.index < (data.imagesTotal.value-1))) {
+                        if ((img.index>=0) && (img.index < (data.imagesTotal.value-1))) {
                             Icon(
                                 AppIcons.imageToRight, "",Modifier.clickable { data.toNextImage() }
                             )
@@ -312,7 +312,9 @@ internal fun ShowImagePlaceholder(
     maxWidth:Int,
     modifier: Modifier = Modifier,
 ) {
-    val (iw,ih)=WHGetImageDimentions(image.width,image.height,maxWidth,1.0f/Resources.getSystem().displayMetrics.density)
+    val tag = "ShowImagePlaceholder"
+    val (iw,ih)=WHGetImageDimentions(image.thumbWidth,image.thumbHeight,maxWidth,1.0f/Resources.getSystem().displayMetrics.density)
+    Log.d(tag,"Image ${image.index} is (${iw}x${ih}) from (${image.width}x${image.height}), maxWidth is $maxWidth")
     if (!image.inFavorites && image.thumbStatus==WHStatus.LOADED) {
         val painter =
             rememberAsyncImagePainter(model = File(data.imageFromCache(image.id, WHFileType.THUMBNAIL)))

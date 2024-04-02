@@ -684,6 +684,7 @@ class UiData {
     fun toPreviousImage() {
         selectedImage.value?.let {
             if (it.index>0) {
+                loadPage(imagePage(it.index-1))
                 selectImage(it.index-1)
             }
         }
@@ -692,6 +693,7 @@ class UiData {
     fun toNextImage() {
         selectedImage.value?.let {
             if (it.index < (imagesTotal.value-1)) {
+                loadPage(imagePage(it.index+1))
                 selectImage(it.index+1)
             }
         }
