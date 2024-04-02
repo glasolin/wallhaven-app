@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -164,7 +165,11 @@ internal fun ShowFavoriteThumbnail(
 
     val painter =
         rememberAsyncImagePainter(model = File(data.imageFromFavorite(image.id, WHFileType.THUMBNAIL)))
-
+    val scale=if (image.thumbWidth>image.thumbHeight) {
+        ContentScale.FillWidth
+    } else {
+        ContentScale.FillHeight
+    }
     Image(
         painter = painter,
         contentDescription = "",

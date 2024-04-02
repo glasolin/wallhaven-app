@@ -294,11 +294,16 @@ internal fun ShowImage(
     val (iw,ih)=WHGetImageDimentions(image.width,image.height,maxWidth,1.0f/Resources.getSystem().displayMetrics.density)
 
     Log.d(tag,"Display is ${getScreenWidth()}x${getScreenHeight()} density is ${Resources.getSystem().displayMetrics.density}")
-    Log.d(tag,"Image ${image.index} is (${iw}x${ih}) from (${image.width}x${image.height})")
+    Log.d(tag,"Image ${image.index} is (${iw}x${ih}) from (${image.width}x${image.height}, thumb ${image.thumbWidth}x${image.thumbHeight}), maxWidth is $maxWidth")
+    val scale=if (iw>ih) {
+        ContentScale.FillWidth
+    } else {
+        ContentScale.FillHeight
+    }
     Image(
         painter = painter,
         contentDescription = "",
-        contentScale = ContentScale.None,
+        contentScale = scale,
         modifier = modifier
             .width(iw.dp)
             .height(ih.dp)
@@ -318,15 +323,19 @@ internal fun ShowImagePlaceholder(
     if (!image.inFavorites && image.thumbStatus==WHStatus.LOADED) {
         val painter =
             rememberAsyncImagePainter(model = File(data.imageFromCache(image.id, WHFileType.THUMBNAIL)))
-
+        val scale=if (iw>ih) {
+            ContentScale.FillWidth
+        } else {
+            ContentScale.FillHeight
+        }
         Image(
             painter = painter,
             contentDescription = "",
-            contentScale = ContentScale.Fit,
+            contentScale = scale,
             modifier = modifier
                 .width(iw.dp)
                 .height(ih.dp)
-                // .background(Color.Yellow)
+                .background(Color.Yellow)
         )
     } else {
         Box(
