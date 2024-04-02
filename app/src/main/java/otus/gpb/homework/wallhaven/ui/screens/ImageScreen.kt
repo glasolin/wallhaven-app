@@ -203,7 +203,12 @@ internal fun ImageScreen(
 
                 } else {
                     Log.d(tag, "Recompose to ShowImagePlaceholder")
-                    ShowImagePlaceholder(maxWidth = maxWidth,image = img,data=data)
+                    ShowImagePlaceholder(maxWidth = maxWidth,
+                        image = img,
+                        data=data,
+                        modifier = Modifier
+                            .padding(top = 10.dp),
+                    )
                 }
 
                 if (img.extendedInfoStatus == WHStatus.LOADED) {
@@ -238,7 +243,7 @@ internal fun ShowImageColors(
             image.colors[idx].value.green(),
             image.colors[idx].value.blue())
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .width(bWidth)
                 .height(bHeight)
                 .clip(RectangleShape)
@@ -357,7 +362,7 @@ internal fun ShowImageNoDataPlaceholder(
 ) {
     val (iw,ih)=WHGetImageDimentions(1920,1980,maxWidth,1.0f/Resources.getSystem().displayMetrics.density)
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(iw.dp)
             .height(ih.dp)
             .clip(RectangleShape)
