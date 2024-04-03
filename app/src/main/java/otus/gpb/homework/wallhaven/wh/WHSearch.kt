@@ -26,11 +26,13 @@ data class WHSearchRequest(
     var apiKey:String?=null,
     var width:Int?=null,
     var height:Int?=null,
+    var image_id:String?=null,
 ) {
     fun queryMap() : Map<String,String> {
         val requestData =mutableMapOf<String,String>()
+        val skip= mutableListOf<String>()
 
-        val q= mutableListOf<String>()
+        val q = mutableListOf<String>()
 
         search?.let {
             if (it.isNotEmpty()) q.add(it.trim())
@@ -43,72 +45,92 @@ data class WHSearchRequest(
             }
             if (t.isNotEmpty()) {q.add(t)}
         }
+        image_id?.let {
+            if (it.isNotEmpty()) {
+                q.add("like:$it")
+            }
+        }
         if (q.isNotEmpty()) {requestData["q"]=q.joinToString().trim()}
 
-        when (purity) {
-            WHPurity.SFW -> requestData["purity"]="100"
-            WHPurity.SKETCHY -> requestData["purity"]="010"
-            WHPurity.NSFW -> requestData["purity"]="001"
-            WHPurity.ALL -> requestData["purity"]="111"
-            null -> requestData["purity"]="100"
+        if (!skip.contains("purity")) {
+            when (purity) {
+                WHPurity.SFW -> requestData["purity"] = "100"
+                WHPurity.SKETCHY -> requestData["purity"] = "010"
+                WHPurity.NSFW -> requestData["purity"] = "001"
+                WHPurity.ALL -> requestData["purity"] = "111"
+                null -> requestData["purity"] = "100"
+            }
         }
-        when (category) {
-            WHCategories.GENERAL -> requestData["categories"]="100"
-            WHCategories.ANIME -> requestData["categories"]="010"
-            WHCategories.PEOPLE -> requestData["categories"]="001"
-            WHCategories.ALL -> requestData["categories"]="111"
-            null -> requestData["categories"]="111"
-        }
-
-        when (sorting) {
-            WHSorting.DATE_ADDED -> requestData["sorting"]="date_added"
-            WHSorting.RELEVANCE ->  requestData["sorting"]="relevance"
-            WHSorting.RANDOM -> requestData["sorting"]="random"
-            WHSorting.VIEWS -> requestData["sorting"]="views"
-            WHSorting.FAVORITES -> requestData["sorting"]="favorites"
-            WHSorting.TOPLIST -> requestData["sorting"]="toplist"
-            null -> {}
+        if (!skip.contains("category")) {
+            when (category) {
+                WHCategories.GENERAL -> requestData["categories"] = "100"
+                WHCategories.ANIME -> requestData["categories"] = "010"
+                WHCategories.PEOPLE -> requestData["categories"] = "001"
+                WHCategories.ALL -> requestData["categories"] = "111"
+                null -> requestData["categories"] = "111"
+            }
         }
 
-        when (ratio) {
-            WHRatio.R16x9 -> requestData["ratios"]="16x9"
-            WHRatio.R16x10 -> requestData["ratios"]="16x10"
-            WHRatio.R18x9 -> requestData["ratios"]="18x9"
-            WHRatio.R21x9 -> requestData["ratios"]="21x9"
-            WHRatio.R32x9 -> requestData["ratios"]="32x9"
-            WHRatio.R48x9 -> requestData["ratios"]="48x9"
-            WHRatio.R4x3 -> requestData["ratios"]="4x3"
-            WHRatio.R5x4 -> requestData["ratios"]="5x4"
-            WHRatio.R3x2 -> requestData["ratios"]="3x2"
-            WHRatio.R1x1 -> requestData["ratios"]="1x1"
-            WHRatio.R9x16 -> requestData["ratios"]="9x16"
-            WHRatio.R10x16 -> requestData["ratios"]="10x16"
-            WHRatio.R9x18 -> requestData["ratios"]="9x18"
-            WHRatio.R9x21 -> requestData["ratios"]="9x21"
-            WHRatio.R9x32 -> requestData["ratios"]="9x32"
-            WHRatio.R9x48 -> requestData["ratios"]="9x48"
-            WHRatio.R3x4 -> requestData["ratios"]="3x4"
-            WHRatio.R4x5 -> requestData["ratios"]="4x5"
-            WHRatio.R2x3 -> requestData["ratios"]="2x3"
-            WHRatio.ANY,null -> {}
+        if (!skip.contains("sorting")) {
+            when (sorting) {
+                WHSorting.DATE_ADDED -> requestData["sorting"] = "date_added"
+                WHSorting.RELEVANCE -> requestData["sorting"] = "relevance"
+                WHSorting.RANDOM -> requestData["sorting"] = "random"
+                WHSorting.VIEWS -> requestData["sorting"] = "views"
+                WHSorting.FAVORITES -> requestData["sorting"] = "favorites"
+                WHSorting.TOPLIST -> requestData["sorting"] = "toplist"
+                null -> {}
+            }
         }
 
-        when (order) {
-            WHOrder.DESC -> requestData["order"]="desc"
-            WHOrder.ASC -> requestData["order"]="asc"
-            null -> {}
+        if (!skip.contains("ratio")) {
+            when (ratio) {
+                WHRatio.R16x9 -> requestData["ratios"] = "16x9"
+                WHRatio.R16x10 -> requestData["ratios"] = "16x10"
+                WHRatio.R18x9 -> requestData["ratios"] = "18x9"
+                WHRatio.R21x9 -> requestData["ratios"] = "21x9"
+                WHRatio.R32x9 -> requestData["ratios"] = "32x9"
+                WHRatio.R48x9 -> requestData["ratios"] = "48x9"
+                WHRatio.R4x3 -> requestData["ratios"] = "4x3"
+                WHRatio.R5x4 -> requestData["ratios"] = "5x4"
+                WHRatio.R3x2 -> requestData["ratios"] = "3x2"
+                WHRatio.R1x1 -> requestData["ratios"] = "1x1"
+                WHRatio.R9x16 -> requestData["ratios"] = "9x16"
+                WHRatio.R10x16 -> requestData["ratios"] = "10x16"
+                WHRatio.R9x18 -> requestData["ratios"] = "9x18"
+                WHRatio.R9x21 -> requestData["ratios"] = "9x21"
+                WHRatio.R9x32 -> requestData["ratios"] = "9x32"
+                WHRatio.R9x48 -> requestData["ratios"] = "9x48"
+                WHRatio.R3x4 -> requestData["ratios"] = "3x4"
+                WHRatio.R4x5 -> requestData["ratios"] = "4x5"
+                WHRatio.R2x3 -> requestData["ratios"] = "2x3"
+                WHRatio.ANY, null -> {}
+            }
+        }
+
+
+        if (!skip.contains("order")) {
+            when (order) {
+                WHOrder.DESC -> requestData["order"] = "desc"
+                WHOrder.ASC -> requestData["order"] = "asc"
+                null -> {}
+            }
         }
 
         if (seed?.isNotEmpty() == true) {requestData["seed"]=seed!!}
 
         if (page!=null && page!! >0 && page!! <9999) {requestData["page"]=page.toString()}
 
-        if (width!=null && height!=null && width!! >0 && width!! <9999 && height!! >0 && height!! <9999) {
-            requestData["resolutions"]="${width}x${height}"
+        if (!skip.contains("dimensions")) {
+            if (width != null && height != null && width!! > 0 && width!! < 9999 && height!! > 0 && height!! < 9999) {
+                requestData["resolutions"] = "${width}x${height}"
+            }
         }
-        color?.let {
-            if (it.name.isNotEmpty()) {
-                requestData["colors"] = it.name
+        if (!skip.contains("color")) {
+            color?.let {
+                if (it.name.isNotEmpty()) {
+                    requestData["colors"] = it.name
+                }
             }
         }
 

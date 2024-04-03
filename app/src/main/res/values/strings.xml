@@ -81,4 +81,5 @@
     <string name="image_button_clear_favorites">Clear favorites</string>
     <string name="settings_favorites_button_nuke">Nuke favorites</string>
     <string name="found_matches">"Found: %1d"</string>
+    <string name="filters_from_image_string">From image ID</string>
 </resources>

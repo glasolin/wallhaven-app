@@ -174,6 +174,7 @@ internal fun ImageScreen(
                     Log.d(tag, "Recompose to ShowImage")
                     ShowImage(
                         data = data,
+                        state = state,
                         maxWidth = maxWidth,
                         image = img,
                         modifier= Modifier
@@ -285,6 +286,7 @@ internal fun ShowImageTags(
 @Composable
 internal fun ShowImage(
     data:UiData,
+    state:UiState,
     maxWidth:Int,
     image: ImageInfo,
     modifier: Modifier = Modifier,
@@ -314,6 +316,10 @@ internal fun ShowImage(
         modifier = modifier
             .width(iw.dp)
             .height(ih.dp)
+            .clickable(onClick = {
+                data.loadFromImage(image)
+                state.navigate(Navigation.MAIN)
+            })
     )
 }
 

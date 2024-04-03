@@ -129,6 +129,14 @@ internal fun FiltersScreen(
         FiltersScreenTagsGrid(
             data=data
         )
+        if (data.fromImageString.observeAsState().value!!.isNotEmpty()) {
+            OutlinedTextField(
+                value = data.fromImageString.observeAsState().value!!,
+                singleLine = true,
+                onValueChange = { data.fromImageString.value = it },
+                label = { Text(stringResource(R.string.filters_from_image_string)) }
+            )
+        }
         ExtendedFloatingActionButton(
             onClick = {data.clearFilters()},
             icon = { Icon(AppIcons.ClearCache,"") },

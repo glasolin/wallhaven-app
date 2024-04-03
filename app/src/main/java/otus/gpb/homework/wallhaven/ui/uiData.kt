@@ -93,6 +93,7 @@ class UiData {
     private var currentRequestData=WHSearchRequest()
 
     var searchString = MutableLiveData<String>("")
+    var fromImageString = MutableLiveData<String>("")
     private var itemsOnPage = 0
 
     private var imageInfo = MutableSharedFlow<Triple<Int,ImageInfo,UpdateParts>?>()
@@ -173,6 +174,10 @@ class UiData {
 
         settings.whTags.observeForever() {
             currentRequestData.tags=it
+            refresh()
+        }
+        fromImageString.observeForever() {
+            currentRequestData.image_id=it
             refresh()
         }
 
@@ -598,6 +603,7 @@ class UiData {
         settings.whColor.value=""
         settings.whPurity.value=WHPurity.SFW
         settings.whTags.value= emptyList()
+        fromImageString.value=""
     }
 
     fun selectImage(idx: Int) {
@@ -699,6 +705,9 @@ class UiData {
         }
     }
 
-
+    fun loadFromImage(image: ImageInfo) {
+        fromImageString.value=image.id
+        refresh()
+    }
 }
 
