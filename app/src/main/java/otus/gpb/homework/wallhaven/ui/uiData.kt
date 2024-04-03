@@ -421,7 +421,7 @@ class UiData {
                 val idx=i+(list.meta.per_page*(list.meta.current_page-1))
                 with (list.data[i]) {
                     //Log.d(tag,"emit image $idx as $id")
-                    val(thumbWidth,thumbHeight)= WHGetThumbDimentions(dimension_x,dimension_y)
+                    val(thumbWidth,thumbHeight)= WHGetThumbDimentions(dimension_x,dimension_y, byWidth = true)
                     imageInfo.emit(
                         Triple(idx,
                             ImageInfo(

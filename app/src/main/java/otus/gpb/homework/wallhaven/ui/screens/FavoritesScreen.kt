@@ -173,7 +173,7 @@ internal fun ShowFavoriteThumbnail(
     Image(
         painter = painter,
         contentDescription = "",
-        contentScale = ContentScale.Crop,
+        contentScale = ContentScale.FillWidth,
         modifier = Modifier
             .width(image.thumbWidth.dp)
             .height(image.thumbHeight.dp)

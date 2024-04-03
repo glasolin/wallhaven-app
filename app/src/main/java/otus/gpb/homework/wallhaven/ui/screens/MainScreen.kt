@@ -295,14 +295,16 @@ internal fun ShowThumbnail(
     image:ImageInfo,
     modifier: Modifier = Modifier,
 ) {
-
+    val tag = "ShowThumbnail"
+    val model = File(data.imageFromCache(image.id, WHFileType.THUMBNAIL))
+    Log.d(tag,"File for thumbnail is $model")
     val painter =
-        rememberAsyncImagePainter(model = File(data.imageFromCache(image.id, WHFileType.THUMBNAIL)))
+        rememberAsyncImagePainter(model = model)
 
     Image(
         painter = painter,
         contentDescription = "",
-        contentScale = ContentScale.Crop,
+        contentScale = ContentScale.FillWidth,
         modifier = Modifier
             .width(image.thumbWidth.dp)
             .height(image.thumbHeight.dp)
