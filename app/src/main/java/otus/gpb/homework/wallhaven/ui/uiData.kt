@@ -63,6 +63,14 @@ enum class UpdateParts {
     ALL, THUMB_INFO, IMAGE_INFO, EXTENDED_INFO, FAVORITE_INFO
 }
 
+enum class ImageMode {
+    SEARCH, FAVORITES
+}
+
+enum class PossibleFilters {
+    CATEGORY,RATIO,RESOLUTION,COLOR,PURITY,TAGS,SEARCH,IMAGE
+}
+
 const val IMAGE_LOAD_TRIES = 3
 const val IMAGE_LOAD_MIN_DELAY_MS = 500
 const val IMAGE_LOAD_MAX_DELAY_MS = 1500
@@ -110,7 +118,11 @@ class UiData {
     private var jobs= mutableListOf<Job>()
     val imagesTotal= mutableIntStateOf(-1)
     val selectedImage = mutableStateOf<ImageInfo?>(null)
+    val nextImage = mutableStateOf<ImageInfo?>(null)
+    val previousImage = mutableStateOf<ImageInfo?>(null)
     private var ready=false
+
+    var imageMode=ImageMode.SEARCH
 
     private val favorites=Favorites()
     private val whImg=WHImage()
@@ -595,35 +607,49 @@ class UiData {
         }
     }
 
-    fun clearFilters() {
-        settings.whCatehory.value=WHCategories.GENERAL
-        settings.whRatio.value=WHRatio.ANY
-        settings.whResolutionWidth.value=0
-        settings.whResolutionHeight.value=0
-        settings.whColor.value=""
-        settings.whPurity.value=WHPurity.SFW
-        settings.whTags.value= emptyList()
-        fromImageString.value=""
-    }
-
-    fun selectImage(idx: Int) {
-        Log.d(tag,"selected image is $idx")
-        imagesData[idx]?.let {
-            selectedImage.value=it
-            loadImage(it.copy(),WHFileType.IMAGE,)
-            inFavorites(it.copy())
-            loadExtendedInfo(it.copy())
+    fun clearFilters(preserve: List<PossibleFilters> =emptyList<PossibleFilters>()) {
+        if (!preserve.contains(PossibleFilters.CATEGORY)) {
+            settings.whCatehory.value = WHCategories.GENERAL
+        }
+        if (!preserve.contains(PossibleFilters.RATIO)) {
+            settings.whRatio.value = WHRatio.ANY
+        }
+        if (!preserve.contains(PossibleFilters.RESOLUTION)) {
+            settings.whResolutionWidth.value = 0
+            settings.whResolutionHeight.value = 0
+        }
+        if (!preserve.contains(PossibleFilters.COLOR)) {
+            settings.whColor.value = ""
+        }
+        if (!preserve.contains(PossibleFilters.PURITY)) {
+            settings.whPurity.value = WHPurity.SFW
+        }
+        if (!preserve.contains(PossibleFilters.TAGS)) {
+            settings.whTags.value = emptyList()
+        }
+        if (!preserve.contains(PossibleFilters.IMAGE)) {
+            fromImageString.value = ""
+        }
+        if (!preserve.contains(PossibleFilters.SEARCH)) {
+            searchString.value = ""
         }
     }
 
     fun loadFromColor(color: WHColor) {
+        clearFilters(listOf(PossibleFilters.PURITY))
         settings.whColor.value=color.name
         refresh()
     }
 
     fun loadFromTag(tag: WHTag) {
+        clearFilters(listOf(PossibleFilters.PURITY))
         settings.whTags.value= mutableListOf(tag.tag)
-        searchString.value=""
+        refresh()
+    }
+
+    fun loadFromImage(image: ImageInfo) {
+        clearFilters(listOf(PossibleFilters.PURITY))
+        fromImageString.value=image.id
         refresh()
     }
 
@@ -680,34 +706,68 @@ class UiData {
         }
     }
 
+    fun selectImage(idx: Int) {
+        imageMode=ImageMode.SEARCH
+        Log.d(tag,"selected image is $idx")
+        imagesData[idx]?.let {
+            selectedImage.value=it
+            loadImage(it.copy(),WHFileType.IMAGE,)
+            inFavorites(it.copy())
+            loadExtendedInfo(it.copy())
+
+            if (it.index>0) {
+                previousImage.value=imagesData[it.index - 1]
+                previousImage.value?.let {pi ->
+                    loadPage(imagePage(pi.index))
+                }
+            } else {
+                previousImage.value=null
+            }
+            if (it.index < (imagesTotal.value-1)) {
+                nextImage.value=imagesData[it.index + 1]
+                nextImage.value?.let {ni ->
+                    loadPage(imagePage(ni.index))
+                }
+            } else {
+                nextImage.value=null
+            }
+        }
+    }
 
     fun selectFavouriteImage(image: ImageInfo) {
-        image.index=-1
+        imageMode=ImageMode.FAVORITES
         image.inFavorites=true
         selectedImage.value=image
+        if (image.index>0) {
+            previousImage.value=_favoritesData.value[image.index-1]
+        } else {
+            previousImage.value=null
+        }
+        if (image.index<(favoritesData.value.size-1)) {
+            nextImage.value=_favoritesData.value[image.index+1]
+        } else {
+            nextImage.value=null
+        }
     }
 
     fun toPreviousImage() {
-        selectedImage.value?.let {
-            if (it.index>0) {
-                loadPage(imagePage(it.index-1))
-                selectImage(it.index-1)
+        previousImage.value?.let {
+            when (imageMode) {
+                ImageMode.SEARCH ->selectImage(it.index)
+                ImageMode.FAVORITES ->selectFavouriteImage(it)
             }
         }
     }
 
     fun toNextImage() {
-        selectedImage.value?.let {
-            if (it.index < (imagesTotal.value-1)) {
-                loadPage(imagePage(it.index+1))
-                selectImage(it.index+1)
+        nextImage.value?.let {
+            when (imageMode) {
+                ImageMode.SEARCH ->selectImage(it.index)
+                ImageMode.FAVORITES ->selectFavouriteImage(it)
             }
         }
     }
 
-    fun loadFromImage(image: ImageInfo) {
-        fromImageString.value=image.id
-        refresh()
-    }
+
 }
 

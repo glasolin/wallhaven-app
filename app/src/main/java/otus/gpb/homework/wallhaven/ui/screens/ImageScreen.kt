@@ -1,10 +1,8 @@
 package otus.gpb.homework.wallhaven.ui.screens
 
-import android.content.Context
 import android.content.res.Resources
-import android.util.DisplayMetrics
 import android.util.Log
-import android.util.TypedValue
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,26 +11,27 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.asIntState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,6 +57,7 @@ import otus.gpb.homework.wallhaven.MainActivityViewModel
 import otus.gpb.homework.wallhaven.R
 import otus.gpb.homework.wallhaven.getScreenHeight
 import otus.gpb.homework.wallhaven.getScreenWidth
+import otus.gpb.homework.wallhaven.ui.ImageMode
 import otus.gpb.homework.wallhaven.ui.UiData
 import otus.gpb.homework.wallhaven.ui.UiState
 import otus.gpb.homework.wallhaven.ui.assets.FlowRow
@@ -135,16 +136,18 @@ internal fun ImageScreen(
             val maxWidth = LocalDensity.current.run {
                 (columnSize.value.width).toInt()
             }
-            data.selectedImage?.value?.let { img ->
+            data.selectedImage.value?.let { img ->
                 Row {
                     Column(
                         modifier = Modifier
                             .weight(0.05f)
                             .padding(top = 4.dp)
                     ) {
-                        if (img.index>0) {
+                        data.previousImage.value?.let {
                             Icon(
-                                AppIcons.imageToLeft, "",Modifier.clickable { data.toPreviousImage() }
+                                AppIcons.imageToLeft,
+                                "",
+                                Modifier.clickable { data.toPreviousImage() }
                             )
                         }
                     }
@@ -163,53 +166,85 @@ internal fun ImageScreen(
                             .weight(0.05f)
                             .padding(top = 4.dp)
                     ) {
-                        if ((img.index>=0) && (img.index < (data.imagesTotal.value-1))) {
+                        data.nextImage.value?.let {
                             Icon(
                                 AppIcons.imageToRight, "",Modifier.clickable { data.toNextImage() }
                             )
                         }
                     }
                 }
-                if (img.imageStatus == WHStatus.LOADED) {
-                    Log.d(tag, "Recompose to ShowImage")
-                    ShowImage(
-                        data = data,
-                        state = state,
-                        maxWidth = maxWidth,
-                        image = img,
-                        modifier= Modifier
-                            .padding(top = 10.dp)
-                    )
-                    if (img.inFavorites) {
-                        ExtendedFloatingActionButton(
-                            onClick = { data.removeFromFavorites(img) },
-                            icon = { Icon(AppIcons.fromFavorites, "") },
-                            text = { Text(stringResource(R.string.image_button_remove_from_favorites)) },
-                            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+                Column () {
+                    if (img.imageStatus == WHStatus.LOADED) {
+                        Log.d(tag, "Recompose to ShowImage")
+                        ShowImage(
+                            data = data,
+                            state = state,
+                            maxWidth = maxWidth,
+                            image = img,
                             modifier = Modifier
-                                .align(Alignment.End)
-                                .padding(top = 24.dp, bottom = 8.dp),
+                                .padding(top = 10.dp)
                         )
-                    } else {
-                        ExtendedFloatingActionButton(
-                            onClick = { data.addToFavorites(img) },
-                            icon = { Icon(AppIcons.toFavorites, "") },
-                            text = { Text(stringResource(R.string.image_button_add_to_favorites)) },
-                            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-                            modifier = Modifier
-                                .align(Alignment.End)
+                        Row (
+                            modifier=Modifier
                                 .padding(top = 24.dp, bottom = 8.dp),
+                        ){
+                            Column(
+                                modifier = Modifier
+                                    .weight(0.3f)
+                                    .padding(top = 16.dp)
+                            ) {
+                                Row {
+                                    Icon(
+                                        AppIcons.imageViews, "",
+                                    )
+                                    Text(img.views.toString())
+                                }
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .weight(0.7f)
+                            ) {
+                                if (img.inFavorites) {
+                                    ExtendedFloatingActionButton(
+                                        onClick = { data.removeFromFavorites(img) },
+                                        icon = { Icon(AppIcons.fromFavorites, "") },
+                                        text = { Text(stringResource(R.string.image_button_remove_from_favorites)) },
+                                        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+                                        modifier = Modifier
+                                            .align(Alignment.End)
+                                    )
+                                } else {
+                                    ExtendedFloatingActionButton(
+                                        onClick = { data.addToFavorites(img) },
+                                        icon = { Icon(AppIcons.toFavorites, "") },
+                                        text = { Text(stringResource(R.string.image_button_add_to_favorites)) },
+                                        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+                                        modifier = Modifier
+                                            .align(Alignment.End)
+                                    )
+                                }
+                            }
+                            Column(
+                                modifier=Modifier
+                                    .padding(start=8.dp)
+                            ) {
+                                FloatingActionButton(
+                                    onClick = {state.share(File(data.imageFromCache(img.id,WHFileType.IMAGE)))}
+                                ) {
+                                    Icon(AppIcons.Share,"")
+                                }
+                            }
+                        }
+                    } else {
+                        Log.d(tag, "Recompose to ShowImagePlaceholder")
+                        ShowImagePlaceholder(
+                            maxWidth = maxWidth,
+                            image = img,
+                            data = data,
+                            modifier = Modifier
+                                .padding(top = 10.dp),
                         )
                     }
-
-                } else {
-                    Log.d(tag, "Recompose to ShowImagePlaceholder")
-                    ShowImagePlaceholder(maxWidth = maxWidth,
-                        image = img,
-                        data=data,
-                        modifier = Modifier
-                            .padding(top = 10.dp),
-                    )
                 }
 
                 if (img.extendedInfoStatus == WHStatus.LOADED) {
@@ -223,6 +258,7 @@ internal fun ImageScreen(
         }
     }
 }
+
 
 @Composable
 internal fun ShowImageColors(
@@ -283,6 +319,7 @@ internal fun ShowImageTags(
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ShowImage(
     data:UiData,
@@ -321,7 +358,114 @@ internal fun ShowImage(
                 state.navigate(Navigation.MAIN)
             })
     )
+    /*val items=listOf(data.previousImage,data.selectedImage,data.nextImage)
+    val pagerState = rememberPagerState(pageCount = {
+        items.size
+    })
+    LaunchedEffect(pagerState) {
+        // Collect from the a snapshotFlow reading the currentPage
+        snapshotFlow { pagerState.currentPage }.collect { index ->
+            items[index].value?.let { img ->
+                when (data.imageMode) {
+                    ImageMode.SEARCH -> data.selectImage(img.index)
+                    ImageMode.FAVORITES -> data.selectFavouriteImage(img)
+                }
+            }
+        }
+    }
+
+    HorizontalPager(
+        state = pagerState,
+    ) { index ->
+        items[index].value?.let { img ->
+            val painter =
+                rememberAsyncImagePainter(model = File(
+                    if (img.inFavorites) {
+                        data.imageFromFavorite(img.id,WHFileType.IMAGE)
+                    } else {
+                        data.imageFromCache(img.id, WHFileType.IMAGE)
+                    }
+                ))
+            val (iw,ih)=WHGetImageDimentions(img.width,img.height,maxWidth,1.0f/Resources.getSystem().displayMetrics.density)
+            val scale=if (iw>ih) {
+                ContentScale.FillWidth
+            } else {
+                ContentScale.FillHeight
+            }
+            Image(
+                painter = painter,
+                contentDescription = "",
+                contentScale = scale,
+                modifier = modifier
+                    .width(iw.dp)
+                    .height(ih.dp)
+                    .clickable(onClick = {
+                        data.loadFromImage(img)
+                        state.navigate(Navigation.MAIN)
+                    })
+            )
+        }
+    }*/
 }
+/* TODO
+  Box(modifier = Modifier.fillMaxSize()) {
+                    HorizontalPager(
+                        pageCount = animals.size,
+                        state = pagerState,
+                        key = { animals[it] },
+                        pageSize = PageSize.Fill
+                    ) { index ->
+                        Image(
+                            painter = painterResource(id = animals[index]),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .offset(y = -(16).dp)
+                            .fillMaxWidth(0.5f)
+                            .clip(RoundedCornerShape(100))
+                            .background(MaterialTheme.colors.background)
+                            .padding(8.dp)
+                            .align(Alignment.BottomCenter)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(
+                                        pagerState.currentPage - 1
+                                    )
+                                }
+                            },
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowLeft,
+                                contentDescription = "Go back"
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(
+                                        pagerState.currentPage + 1
+                                    )
+                                }
+                            },
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowRight,
+                                contentDescription = "Go forward"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+ */
 
 @Composable
 internal fun ShowImagePlaceholder(

@@ -3,22 +3,18 @@ package otus.gpb.homework.wallhaven.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
-import androidx.activity.viewModels
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.util.trace
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider.getUriForFile
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navOptions
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
-import otus.gpb.homework.wallhaven.MainActivityViewModel
 import otus.gpb.homework.wallhaven.ui.navigation.FAVORITES_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.FILTERS_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.IMAGE_ROUTE
@@ -31,7 +27,7 @@ import otus.gpb.homework.wallhaven.ui.screens.navigateToFilters
 import otus.gpb.homework.wallhaven.ui.screens.navigateToImage
 import otus.gpb.homework.wallhaven.ui.screens.navigateToMain
 import otus.gpb.homework.wallhaven.ui.screens.navigateToSettings
-import javax.inject.Inject
+import java.io.File
 
 class UiState constructor() {
     private var context:Context?=null
@@ -105,5 +101,29 @@ class UiState constructor() {
             it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context!!.startActivity(intent)
+    }
+
+    fun share(text: String) {
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            putExtra(Intent.EXTRA_TEXT, text)
+            type = "text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, null)
+        shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ContextCompat.startActivity(context!!, shareIntent, null)
+    }
+
+    fun share(f: File) {
+        val uri=getUriForFile(context!!, context!!.packageName+".fileprovider", f);
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            putExtra(Intent.EXTRA_STREAM, uri)
+            type = "*/*"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, null)
+        shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        ContextCompat.startActivity(context!!, shareIntent, null)
     }
 }

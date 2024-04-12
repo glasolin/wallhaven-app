@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.HeartBroken
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RemoveRedEye
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.CheckCircleOutline
@@ -166,12 +168,14 @@ object AppIcons {
     val Reload = Icons.Rounded.Refresh
     val Checked = Icons.Filled.Check
     val Filter = Icons.Filled.FilterAlt
-    var RemoveTag = Icons.Filled.Close
-    var toFavorites = Icons.Filled.Favorite
-    var fromFavorites = Icons.Filled.HeartBroken
-    var clearFavorites = Icons.Filled.DeleteForever
-    var imageToLeft=Icons.Outlined.ChevronLeft
-    var imageToRight=Icons.Outlined.ChevronRight
+    val RemoveTag = Icons.Filled.Close
+    val toFavorites = Icons.Filled.Favorite
+    val fromFavorites = Icons.Filled.HeartBroken
+    val clearFavorites = Icons.Filled.DeleteForever
+    val imageToLeft=Icons.Outlined.ChevronLeft
+    val imageToRight=Icons.Outlined.ChevronRight
+    val imageViews = Icons.Filled.RemoveRedEye
+    val Share = Icons.Filled.Share
     val nuke = Icons.Filled.Bolt
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
     val Upcoming = Icons.Rounded.Upcoming

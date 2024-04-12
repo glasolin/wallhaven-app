@@ -62,6 +62,7 @@ import otus.gpb.homework.wallhaven.ui.assets.DropdownMenuBox
 import otus.gpb.homework.wallhaven.ui.assets.SuggestionTextBox
 import otus.gpb.homework.wallhaven.ui.navigation.FAVORITES_ROUTE
 import otus.gpb.homework.wallhaven.ui.navigation.FILTERS_ROUTE
+import otus.gpb.homework.wallhaven.ui.navigation.Navigation
 import otus.gpb.homework.wallhaven.ui.theme.AppIcons
 import otus.gpb.homework.wallhaven.ui.theme.AppTheme
 import otus.gpb.homework.wallhaven.ui.theme.Colors
@@ -88,6 +89,7 @@ internal fun FiltersRoute(
 ) {
     FiltersScreen(
         data = viewModel.data(),
+        state= viewModel.state(),
         modifier= Modifier
             .padding(all = 10.dp)
             //.fillMaxSize()
@@ -101,6 +103,7 @@ private fun PreviewFiltersScreen() {
     AppTheme {
         FiltersScreen(
             modifier = Modifier,
+            state = UiState(),
             data= UiData().apply { setContext(LocalContext.current) },
         )
     }
@@ -109,6 +112,7 @@ private fun PreviewFiltersScreen() {
 @Composable
 internal fun FiltersScreen(
     data: UiData,
+    state: UiState,
     modifier: Modifier = Modifier,
 ) {
 
@@ -138,7 +142,10 @@ internal fun FiltersScreen(
             )
         }
         ExtendedFloatingActionButton(
-            onClick = {data.clearFilters()},
+            onClick = {
+                data.clearFilters()
+                state.navigate(Navigation.MAIN)
+            },
             icon = { Icon(AppIcons.ClearCache,"") },
             text={ Text(stringResource(R.string.filters_button_clear)) },
             elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
